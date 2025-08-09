@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "**" ]
   pull_request:
+permissions:
+  id-token: write   # ✅ Required for OIDC
+  contents: read    # optional
 
 
 jobs:

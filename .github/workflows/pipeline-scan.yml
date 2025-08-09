@@ -18,7 +18,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-west-2
-          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/warden-production
+          role-to-assume: arn:aws:iam::105014798395:role/warden-production
 
       - name: Verify identity
         run: aws sts get-caller-identity

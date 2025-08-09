@@ -1,11 +1,14 @@
 name: Pipeline Scan
 
 on:
-    workflow_call:
+  push:
+    branches: [ "**" ]
+  pull_request:
+
 
 jobs:
   scan:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code

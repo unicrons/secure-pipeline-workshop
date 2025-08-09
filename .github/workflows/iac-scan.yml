@@ -6,9 +6,6 @@ on:
       scan-result:
         description: "IaC scan result"
         value: ${{ jobs.iac-scan.outputs.result }}
-
-jobs:
-
 jobs:
   iac-scan:
     name: IAC Scan with Trivy

@@ -1,12 +1,7 @@
 name: Pipeline Scan
 
 on:
-  pull_request:
-    branches: [ main ]
-
-permissions:
-  id-token: write   # Required for OIDC
-  contents: read    # Optional, depends on your job
+    workflow_call:
 
 jobs:
   scan:

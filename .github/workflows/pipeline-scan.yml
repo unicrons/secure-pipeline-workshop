@@ -1,27 +1,5 @@
-name: Pipeline Security Scan
-
-on:
-  workflow_call:
-    outputs:
-      scan-result:
-        description: "Pipeline scan result"
-        value: ${{ jobs.pipeline-scan.outputs.result }}
-
-jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/pipeline_scan/{tool}/workflow.yml
-
-  pipeline-scan:
-    name: "🚧 Pipeline Scan - Workshop Placeholder"
-    runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.placeholder.outputs.result }}
-    steps:
-      - name: Workshop Placeholder
-        id: placeholder
-        run: |
-          echo "🚧 Replace this job with content from workshop/pipeline_scan/{tool}/workflow.yml!"
-          echo "This will implement: Pipeline security analysis with your chosen tool"
-          {
-            echo "result=workshop-placeholder"
-          } >> "$GITHUB_OUTPUT"
+- name: Auth to AWS
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    aws-region: us-west-2
+    role-to-assume: arn:aws:iam::105014798395:role/warden-production

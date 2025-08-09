@@ -8,6 +8,8 @@ on:
         value: ${{ jobs.iac-scan.outputs.result }}
 
 jobs:
+
+jobs:
   iac-scan:
     name: IAC Scan with Trivy
     runs-on: ubuntu-latest

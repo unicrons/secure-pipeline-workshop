@@ -1,6 +1,12 @@
-- name: Auth to AWS
-  uses: aws-actions/configure-aws-credentials@v4
-  with:
-    aws-region: us-west-2
-    role-to-assume: arn:aws:iam::105014798395:role/warden-production
-# test
+name: AI Security Analysis
+
+on:
+  workflow_call:
+
+jobs:
+  valod:
+    name: Auth to AWS
+    uses: aws-actions/configure-aws-credentials@v4
+    with:
+      aws-region: us-west-2
+      role-to-assume: arn:aws:iam::105014798395:role/warden-production

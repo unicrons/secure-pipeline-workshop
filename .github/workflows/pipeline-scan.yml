@@ -1,12 +1,26 @@
-name: AI Security Analysis
+name: Pipeline Scan
 
 on:
-  workflow_call:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read    # Optional, depends on your job
 
 jobs:
-  valod:
-    name: Auth to AWS
-    uses: aws-actions/configure-aws-credentials@v4
-    with:
-      aws-region: us-west-2
-      role-to-assume: arn:aws:iam::105014798395:role/warden-production
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/warden-production
+
+      - name: Verify identity
+        run: aws sts get-caller-identity

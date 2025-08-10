@@ -1,7 +1,7 @@
 # Infrastructure as Code (IaC) Security Scanning
 
 This workshop module focuses on scanning Infrastructure as Code (IaC) configurations to identify security misconfigurations before infrastructure deployment.
-
+ 
 ## Why is IaC Security Important?
 This is a key step in our shift-left security approach. In the same way we analyze our application code before deploying it, we should do the same with our infrastructure code.
 

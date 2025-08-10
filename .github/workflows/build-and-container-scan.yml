@@ -17,25 +17,108 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/container_scan/{tool}/workflow.yml
 
-  build-and-container-scan:
-    name: "🚧 Build and Container Scan - Workshop Placeholder"
+# =============================================================================
+# GRYPE CONTAINER SCAN JOB
+# =============================================================================
+#
+# Grype is a vulnerability scanner for container images and filesystems
+# Repository: https://github.com/anchore/grype
+#
+# TO USE THIS JOB:
+# 1. Copy this entire job definition into .github/workflows/build-and-container-scan.yml
+# 2. Replace the current jobs: definition with this one
+# 3. This job will build the image, scan it with Grype, and push it if scan passes
+# 4. The scan will fail if CRITICAL or HIGH vulnerabilities are found
+# =============================================================================
+
+jobs:
+  container-scan:
+    name: Container Scan with Grype
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     outputs:
-      digest: ${{ steps.placeholder.outputs.digest }}
-      tag: ${{ steps.placeholder.outputs.tag }}
-      scan-result: ${{ steps.placeholder.outputs.scan-result }}
+      digest: ${{ steps.build.outputs.imageid }}
+      tag: ${{ steps.meta.outputs.tags }}
+      result: ${{ steps.scan-result.outputs.result }}
+    
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
+      - name: Build Docker image
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: ./code
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Grype vulnerability scanner
+        id: scan-tool
+        uses: anchore/scan-action@df395807f4554463d4455b8047cf58e37b6acaae # v6.5.0
+        with:
+          image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          fail-build: true
+          severity-cutoff: high
+          output-format: sarif
+          add-cpes-if-none: true
+
+      - name: Upload SARIF to GitHub Advanced Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d #3.29.5
+        with:
+          sarif_file: ${{ steps.scan-tool.outputs.sarif }}
+          category: grype-container-scan
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
         run: |
-          echo "🚧 Replace this job with content from workshop/container_scan/{tool}/workflow.yml!"
-          echo "This will implement: Build → Container Scan → Push workflow with your chosen tool"
-          {
-            echo "digest=workshop-placeholder"
-            echo "tag=workshop-placeholder"
-            echo "scan-result=workshop-placeholder"
-          } >> "$GITHUB_OUTPUT"
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Container scan passed - no critical vulnerabilities found"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Container scan failed - critical vulnerabilities detected"
+            echo "🔍 View security findings for this PR:"
+            echo "https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.pull_request.number }}+is%3Aopen"
+            exit 1
+          fi
+
+      - name: Build Summary
+        if: always()
+        run: |
+          echo "📦 Build and Scan Summary:"
+          echo "- Image built successfully: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "- Tags: ${{ steps.meta.outputs.tags }}"
+          echo "- Image ID: ${{ steps.build.outputs.imageid }}"
+          echo "- Security scan: ${{ steps.scan-result.outputs.result }}"
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "✅ Build and scan completed successfully"
+          else
+            echo "❌ Build completed but scan failed"
+          fi

@@ -6,10 +6,25 @@ on:
       scan-result:
         description: "Pipeline scan result"
         value: ${{ jobs.pipeline-scan.outputs.result }}
-
+        
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/pipeline_scan/{tool}/workflow.yml
+  zizmor:
+    name: Run zizmor 🌈
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read # only needed for private repos
+      actions: read # only needed for private repos
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor 🌈
+        uses: zizmorcore/zizmor-action@main
+        with:
+          min-severity: "high"
 
   pipeline-scan:
     name: "🚧 Pipeline Scan - Workshop Placeholder"

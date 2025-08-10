@@ -12,6 +12,11 @@
 # 4. The scan will fail if any security issues are found
 # =============================================================================
 
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  pull_request:
+    branches: ['main']
+    
 jobs:
   iac-scan:
     name: IAC Scan with Trivy

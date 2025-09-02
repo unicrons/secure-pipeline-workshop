@@ -64,7 +64,7 @@ While AI security analysis offers powerful capabilities, it's important to under
 
 ## Tools Used in This Module
 
-- [**Google Gemini**](https://github.com/google-gemini/gemini-cli-action) - AI-powered code analysis and security review tool
+- [**Google Gemini**](https://github.com/google-github-actions/run-gemini-cli) - AI-powered code analysis and security review tool
 
 ## Learning Objectives
 

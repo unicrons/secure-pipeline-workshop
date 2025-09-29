@@ -16,6 +16,10 @@ jobs:
   code-scan:
     needs: pipeline-scan
     uses: ./.github/workflows/code-scan.yml
+    permissions:
+      security-events: write
+      contents: read # only needed for private repos
+      actions: read # only needed for private repos
 
   secrets-scan:
     needs: pipeline-scan

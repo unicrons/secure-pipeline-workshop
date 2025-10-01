@@ -29,21 +29,21 @@ jobs:
         id: scan-tool
         uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # 0.28.0
         with:
-          scan-type: 'config'
+          scan-type: "config"
           scan-ref: infra/
           hide-progress: true
-          format: 'sarif'
+          format: "sarif"
           limit-severities-for-sarif: true
-          output: 'trivy-results.sarif'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          output: "trivy-results.sarif"
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
         continue-on-error: false
 
       - name: Upload Trivy scan results to GitHub Security tab
         if: always()
         uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d #3.29.5
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
       - name: Set scan result
         id: scan-result
@@ -55,5 +55,11 @@ jobs:
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ IAC scan failed - security issues detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
             exit 1
           fi
+

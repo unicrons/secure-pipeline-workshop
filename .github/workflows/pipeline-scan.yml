@@ -6,6 +6,16 @@ on:
       scan-result:
         description: "Pipeline scan result"
         value: ${{ jobs.pipeline-scan.outputs.result }}
+      image-digest:
+        description: "Built image digest"
+        value: ${{ jobs.build-and-container-scan.outputs.digest }}
+      image-tag:
+        description: "Built image tag"
+        value: ${{ jobs.build-and-container-scan.outputs.tag }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   container-scan:

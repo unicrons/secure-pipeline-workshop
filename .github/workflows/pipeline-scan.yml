@@ -8,8 +8,20 @@ on:
         value: ${{ jobs.pipeline-scan.outputs.result }}
 
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/pipeline_scan/{tool}/workflow.yml
+  checkout-leak:
+    name: "actions/checkout can leak GitHub credentials"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # As we're going to expose this file, let's limit the permissions
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show `.git/config` content
+        run: |
+          cat .git/config
+          
 
   pipeline-scan:
     name: "🚧 Pipeline Scan - Workshop Placeholder"

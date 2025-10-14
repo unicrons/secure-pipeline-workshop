@@ -6,6 +6,7 @@ data "aws_vpc" "existing" {
   filter {
     name   = "tag:Name"
     values = ["platform-vpc"]
+
   }
 }
 
@@ -40,3 +41,5 @@ data "aws_lb" "existing" {
 data "aws_lb_target_group" "existing" {
   name = var.target_group_name
 }
+
+

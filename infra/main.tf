@@ -19,7 +19,7 @@ resource "aws_ecr_repository" "app" {
     Name        = var.app_name
     Environment = var.environment
   }
-}
+} 
 
 # ==============================================================================
 # CLOUDWATCH LOGS

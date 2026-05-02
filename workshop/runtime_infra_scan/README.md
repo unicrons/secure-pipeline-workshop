@@ -1,5 +1,14 @@
 # Runtime Infrastructure Scan
 
+> ⏱ ~10 min (read-only) / ~25 min (live AWS) · 📍 Module 6 of 7
+>
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ **6** ▸ [7](../ai_scan/)
+
+> [!IMPORTANT]
+> This module needs **a live AWS account** (IAM role + GitHub OIDC trust). Without it,
+> leave the placeholder as-is — the rest of the workshop works fine. To enable it,
+> see [Running this module](#running-this-module) below.
+
 This workshop module focuses on scanning the deployed (runtime) infrastructure for vulnerabilities and misconfigurations that may not be detectable through static analysis of code or configuration files.
 
 ## Why is Runtime Infrastructure Scanning Important?
@@ -64,7 +73,7 @@ By the end of this module, you will:
 - [ ] Monitoring and logging enabled for all critical resources
 - [ ] Regular runtime scans scheduled and reviewed
 
-## Solutions (spoilers — open only when stuck)
+## Running this module
 
 > Unlike the other modules, this one has **no planted bait** to fix. Runtime scans target a *live* AWS account, so the findings depend entirely on whose infrastructure the job assumes into. During the workshop the role points at the maintainers' sandbox account, where you have no permissions to remediate anything — the job is expected to pass green even if Prowler reports findings (note the `-z` flag in the snippet, which suppresses the failing exit code on findings so the pipeline doesn't block on issues you can't fix).
 
@@ -76,6 +85,17 @@ By the end of this module, you will:
 **Why nothing is failing**: `prowler aws ... -z` (the "zero exit code" flag) is intentional here. Without it, *any* finding would fail the job, and you'd be staring at issues in someone else's account with no way to fix them. The point of this step in the workshop is to **wire the integration** (OIDC auth, role assumption, artifact upload), not to remediate.
 
 **Reading the report**: open `prowler-html-report/*.html` and look for high-severity items in `iam` (overly permissive policies, unused credentials, root usage) and `s3` (public buckets, unencrypted storage, missing logging). These are the categories you'd triage first on a real account.
+
+</details>
+
+<details>
+<summary><b>Steampipe + Powerpipe</b> — what to expect during the workshop</summary>
+
+**What you'll see**: the snippet starts a local `steampipe service`, then runs the [`steampipe-mod-aws-compliance`](https://github.com/turbot/steampipe-mod-aws-compliance) `cis_v150` benchmark via Powerpipe against the assumed AWS role. The HTML report is uploaded as the `powerpipe-html-report` artifact — download it from the run summary to browse the CIS v1.5.0 benchmark results.
+
+**Why pick Steampipe over Prowler**: Steampipe exposes cloud resources as **SQL tables** (`select * from aws_iam_user where mfa_enabled = false;`), so you can write ad-hoc compliance queries instead of relying on canned check IDs. The Powerpipe layer adds dashboards, benchmarks (CIS, NIST, PCI…), and HTML/CSV export for any of them. Useful when you need to investigate specific drift patterns rather than run a fixed audit.
+
+**Reading the report**: open `aws_compliance.benchmark.cis_v150.*.html` and follow the failed controls — each one links back to the underlying SQL query, which you can re-run interactively in a local `steampipe query` session for deeper investigation.
 
 </details>
 

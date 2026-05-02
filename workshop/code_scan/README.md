@@ -1,4 +1,17 @@
-# Code Security Analysis (SAST/SCA)
+# Code Security Scan (SAST/SCA)
+
+> ⏱ ~25 min (SAST + SCA) · 📍 Module 2 of 7
+>
+> [1](../pipeline_scan/) ▸ **2** ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
+
+> [!IMPORTANT]
+> **This module is the only one with two placeholders.** `.github/workflows/code-scan.yml`
+> ships with both a `sast-scan` and an `sca-scan` placeholder, because Code Scan covers
+> two complementary techniques. You can:
+>
+> - **Pick one** (replace the entire `jobs:` block with a single tool's job — quickest), or
+> - **Pick one of each** (paste both a SAST tool's job and an SCA tool's job into the same
+>   `jobs:` block, making sure each job has a unique key — full coverage).
 
 This workshop module covers Static Application Security Testing (SAST) and Software Composition Analysis (SCA) to identify security vulnerabilities in application code and dependencies.
 
@@ -68,6 +81,14 @@ By the end of this module, you will:
 - [ ] False positive management
 - [ ] Security metrics tracking
 
+## References
+
+- [OWASP Top Ten](https://owasp.org/www-project-top-ten/) — the canonical list of the most critical web application security risks; most SAST rule packs map back to it.
+- [OWASP Application Security Verification Standard (ASVS)](https://owasp.org/www-project-application-security-verification-standard/) — concrete requirements you can audit your code against.
+- [GitHub: About code scanning](https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning) — how SARIF uploads surface in the *Security → Code scanning* tab.
+- [OSV.dev](https://osv.dev/) — the vulnerability database that powers `osv-scanner`; useful for manually checking a single package.
+- [Snyk: SAST vs DAST vs SCA](https://snyk.io/learn/application-security/sast-vs-dast-vs-sca/) — quick comparison of the three flavours of code/dependency analysis.
+
 ## Solutions (spoilers — open only when stuck)
 
 > The bait for this module lives in two places: a vulnerable code pattern in `code/src/simple-app.js` (SAST) and a known-vulnerable dependency in `code/package.json` (SCA). The CI failures are intentional.
@@ -117,7 +138,7 @@ if (filePath) {
 <details>
 <summary><b>Semgrep (SAST)</b> — <code>javascript.lang.security.audit.detect-child-process</code> at <code>code/src/simple-app.js:42</code></summary>
 
-**Reading the output**: Semgrep's job log only prints `Findings: 1 (1 blocking)` — no rule ID, no file/line. To see what failed, either open the GitHub Code Scanning tab (if your fork has GHAS) or download `semgrep-results.sarif` (you may want to add `actions/upload-artifact` to the snippet for this — it's missing by default).
+**Reading the output**: the snippet's `Summarize findings` step parses the SARIF and prints `ruleId | message | path:line` directly to the job log — no GHAS required. If your fork has GHAS enabled, the SARIF is also uploaded to the *Code Scanning* tab for a richer UI.
 
 **Same root cause as CodeQL**: the `exec(\`cat "${filePath}"\`, …)` line.
 

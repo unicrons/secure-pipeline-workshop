@@ -1,5 +1,9 @@
 # Pipeline Security Scan
 
+> ⏱ ~15 min · 📍 Module 1 of 7
+>
+> **1** ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
+
 This workshop module focuses on scanning the pipeline configuration itself for security vulnerabilities and misconfigurations.
 
 ## Why is Pipeline Security Important?

@@ -1,4 +1,8 @@
-# Container Security Scanning
+# Container Security Scan
+
+> ⏱ ~15 min · 📍 Module 4 of 7
+>
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ **4** ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
 
 This workshop module covers container security scanning to identify vulnerabilities in container images and configurations.
 
@@ -35,7 +39,7 @@ By the end of this module, you will:
 - Understand container security risks
 - Learn to scan images for vulnerabilities
 - Understand supply chain security for containers
-- [🔜] Identify Dockerfile security best practices
+- Identify Dockerfile security best practices
 
 > [!TIP]
 > **A clean scan can take more than one fix.** Bumping the base image
@@ -92,7 +96,7 @@ By the end of this module, you will:
 <details>
 <summary><b>Grype</b> — same root cause, terser output</summary>
 
-**What Grype reports**: a single line — `[…] ERROR discovered vulnerabilities at or above the severity threshold` — plus a helpful warning: `188 packages from EOL distro "alpine 3.19.4"`. The actual CVE list is uploaded as SARIF to the GitHub Code Scanning tab; if your fork doesn't have GHAS, the run page shows nothing actionable. Two snippet improvements help: switch `output-format: sarif` to `table` for the workshop, or upload the SARIF as an `actions/upload-artifact`.
+**What Grype reports**: the `Summarize findings` step parses the SARIF and prints each CVE as `ruleId | message | path:line` to the job log — plus a helpful warning: `188 packages from EOL distro "alpine 3.19.4"`. The full SARIF is also uploaded to the GitHub *Code Scanning* tab if your fork has GHAS enabled.
 
 **Same root cause as Trivy**: EOL alpine base.
 

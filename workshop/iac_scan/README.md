@@ -1,4 +1,8 @@
-# Infrastructure as Code (IaC) Security Scanning
+# Infrastructure as Code (IaC) Security Scan
+
+> ⏱ ~15 min · 📍 Module 5 of 7
+>
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ **5** ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
 
 This workshop module focuses on scanning Infrastructure as Code (IaC) configurations to identify security misconfigurations before infrastructure deployment.
 
@@ -168,10 +172,7 @@ By the end of this module, you will:
 
 **What Trivy IaC flagged**: same ingress rule (port 22 from `0.0.0.0/0`). Trivy's rule ID is `AVD-AWS-0107`.
 
-**Reading the output**: the snippet is configured for SARIF-only — the job log shows `Running Trivy with options: trivy config infra/` followed by `Successfully uploaded results` with **no rule, no file, no line**. To see the finding, either:
-- read the GitHub Code Scanning tab (requires GHAS),
-- switch the snippet's `format` from `sarif` to `table` (sacrifices the GHAS upload), or
-- add an `actions/upload-artifact` step for `trivy-results.sarif` so you can download it.
+**Reading the output**: the snippet's `Summarize findings` step parses the SARIF and prints `ruleId | message | path:line` directly to the job log — no GHAS required. The SARIF is also uploaded to the GitHub *Code Scanning* tab if your fork has GHAS enabled.
 
 **Fix** — identical to the Checkov fix above.
 

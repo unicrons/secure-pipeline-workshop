@@ -1,5 +1,9 @@
 # Secrets Scan
 
+> ⏱ ~15 min · 📍 Module 3 of 7
+>
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ **3** ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
+
 This workshop module focuses on identifying and preventing the exposure of sensitive credentials, API keys, and other secrets in source code, configuration files, and git history.
 
 ## Why is Secrets Scan Important?

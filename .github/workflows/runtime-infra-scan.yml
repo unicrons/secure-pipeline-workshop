@@ -14,7 +14,7 @@ on:
     secrets:
       AWS_IAM_ROLE_ARN:
         description: "AWS IAM Role ARN for authentication"
-        required: true
+        required: false
     outputs:
       runtime-infra-scan-result:
         description: "Runtime infrastructure scan result"

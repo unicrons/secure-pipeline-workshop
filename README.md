@@ -1,11 +1,12 @@
 # Secure Pipeline Workshop
 
-> [!NOTE]
-> **Platform-agnostic principles, GitHub-Actions implementation.** This workshop runs on GitHub Actions for hands-on convenience, but the **tools** (Semgrep, Trivy, Checkov, Prowler…) and **patterns** (shift-left, scan-then-gate, multi-layer pipeline) are universal. To run this on GitLab CI, Jenkins, CircleCI, etc., you'd translate the orchestration glue (workflow files, secrets, triggers) but keep everything else.
-
 Welcome to the "Secure Pipeline" workshop! This hands-on workshop teaches you how to build a comprehensive security-focused CI/CD pipeline with multiple layers of security scanning and best practices.
 
-> ⏱ **Estimated time:** 2–3 hours self-paced (~20 min per module). The workshop is **zero-install** — everything runs in GitHub Actions on your fork.
+> ⏱ **Estimated time:** 2–3 hours self-paced (~20 min per module).
+
+> [!NOTE]
+> **Platform-agnostic principles:** This workshop runs on GitHub Actions for hands-on convenience, but the **tools** (Semgrep, Trivy, Checkov, Prowler…) and **patterns** (shift-left, scan-then-gate, multi-layer pipeline) are universal. To run this on GitLab CI, Jenkins, CircleCI, etc., you'd translate the orchestration glue (workflow files, secrets, triggers) but keep everything else.
+
 
 ## 📁 Repository Structure
 

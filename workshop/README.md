@@ -13,7 +13,7 @@ The idea of this workshop is to demonstrate how to build a "perfect" (secure and
 **The goal is inspirational, not prescriptive.** We do not want you to copy these examples, but to understand the principles and identify the modular components you can adapt to implement in your own environment.
 
 > [!NOTE]
-> **Platform-agnostic principles, GitHub-Actions implementation.** The workshop runs on GitHub Actions for convenience, but the **tools** (Semgrep, Trivy, Checkov, Prowler…) and **patterns** (shift-left, scan-then-gate, multi-layer pipeline) are universal. To take this to GitLab CI, Jenkins, CircleCI, etc., translate the orchestration glue (workflow files, secrets, triggers) and keep everything else.
+> **Platform-agnostic principles:* The workshop runs on GitHub Actions for convenience, but the **tools** (Semgrep, Trivy, Checkov, Prowler…) and **patterns** (shift-left, scan-then-gate, multi-layer pipeline) are universal. To take this to GitLab CI, Jenkins, CircleCI, etc., translate the orchestration glue (workflow files, secrets, triggers) and keep everything else.
 
 ## 🎓 Learning Outcomes
 

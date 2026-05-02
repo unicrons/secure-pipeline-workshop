@@ -61,6 +61,7 @@ jobs:
           steampipe service start
 
       - name: Run specific AWS Compliance benchmarks
+        id: powerpipe
         uses: turbot/powerpipe-action-check@0b905d17e8b6970bc39bcd347c053992bd8770de # v1.0.1
         with:
           mod-url: https://github.com/turbot/steampipe-mod-aws-compliance
@@ -82,8 +83,8 @@ jobs:
         run: |
           if [ "${{ steps.powerpipe.outcome }}" == "success" ]; then
             echo "result=success" >> "$GITHUB_OUTPUT"
-            echo "✅ Runtime infrastructure scan passed - no critical issues found"
+            echo "✅ Runtime infrastructure scan passed — no critical issues found"
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
-            echo "❌ Runtime infrastructure scan failed - security issues detected"
+            echo "❌ Runtime infrastructure scan failed — security issues detected"
           fi

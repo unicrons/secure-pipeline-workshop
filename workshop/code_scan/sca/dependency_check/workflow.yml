@@ -30,10 +30,31 @@ jobs:
         with:
           project: 'code'
           path: './code'
-          format: 'HTML'
+          format: 'ALL'
           args: >
             --failOnCVSS 7
             --enableRetired
+
+      - name: Summarize findings
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        run: |
+          SARIF=reports/dependency-check-report.sarif
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No vulnerabilities found"
+          else
+            echo "❌ Found $COUNT Dependency Check finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: reports/dependency-check-report.sarif
+          category: dependency-check-sca
 
       - name: Set scan result
         id: scan-result
@@ -41,14 +62,14 @@ jobs:
         run: |
           if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
             echo "result=success" >> "$GITHUB_OUTPUT"
-            echo "✅ Code scan passed - no critical vulnerabilities found"
+            echo "✅ Code scan passed — no critical vulnerabilities found"
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
-            echo "❌ Code scan failed - vulnerabilities detected"
+            echo "❌ Code scan failed — vulnerabilities detected"
             exit 1
           fi
 
-      - name: Upload scan report
+      - name: Upload HTML report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:

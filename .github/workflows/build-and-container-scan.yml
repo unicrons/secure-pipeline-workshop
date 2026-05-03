@@ -18,24 +18,110 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/container_scan/{tool}/workflow.yml
-
   build-and-container-scan:
-    name: "🚧 Build and Container Scan - Workshop Placeholder"
+    name: Container Scan with Trivy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     outputs:
-      digest: ${{ steps.placeholder.outputs.digest }}
-      tag: ${{ steps.placeholder.outputs.tag }}
-      scan-result: ${{ steps.placeholder.outputs.scan-result }}
+      digest: ${{ steps.build.outputs.imageid }}
+      tag: ${{ steps.meta.outputs.tags }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
+      - name: Build Docker image
+        id: build
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: ./code
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        id: scan-tool
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: "sarif"
+          output: "trivy-image.sarif"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: false
+
+      - name: Summarize findings
+        if: always() && hashFiles('trivy-image.sarif') != ''
         run: |
-          echo "🚧 Replace this job with content from workshop/container_scan/{tool}/workflow.yml!"
-          echo "This will implement: Build → Container Scan → Push workflow with your chosen tool"
-          {
-            echo "digest=workshop-placeholder"
-            echo "tag=workshop-placeholder"
-            echo "scan-result=workshop-placeholder"
-          } >> "$GITHUB_OUTPUT"
+          SARIF=trivy-image.sarif
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Trivy container finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Container scan passed - no vulnerabilities at or above the configured severity threshold"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Container scan failed - vulnerabilities at or above the configured severity threshold detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
+            exit 1
+          fi
+
+      - name: Build Summary
+        if: always()
+        run: |
+          echo "📦 Build and Scan Summary:"
+          echo "- Image built successfully: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "- Tags: ${{ steps.meta.outputs.tags }}"
+          echo "- Image ID: ${{ steps.build.outputs.imageid }}"
+          echo "- Security scan: ${{ steps.scan-result.outputs.result }}"
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "✅ Build and scan completed successfully"
+          else
+            echo "❌ Build completed but scan failed"
+          fi

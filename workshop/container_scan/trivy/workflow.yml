@@ -9,13 +9,17 @@
 # 1. Copy this entire job definition into .github/workflows/build-and-container-scan.yml
 # 2. Replace the current jobs: definition with this one
 # 3. This job will build the image, scan it with Trivy, and push it if scan passes
-# 4. The scan will fail if CRITICAL or HIGH vulnerabilities are found
+# 4. Results will be uploaded to GitHub Advanced Security (SARIF format)
+# 5. The scan will fail if CRITICAL or HIGH vulnerabilities are found
 # =============================================================================
 
 jobs:
   container-scan:
     name: Container Scan with Trivy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     outputs:
       digest: ${{ steps.build.outputs.imageid }}
       tag: ${{ steps.meta.outputs.tags }}
@@ -57,12 +61,34 @@ jobs:
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: "table"
+          format: "sarif"
+          output: "trivy-image.sarif"
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"
         continue-on-error: false
+
+      - name: Summarize findings
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        run: |
+          SARIF=trivy-image.sarif
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Trivy container finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
 
       - name: Set scan result
         id: scan-result
@@ -74,6 +100,11 @@ jobs:
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ Container scan failed - vulnerabilities at or above the configured severity threshold detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
             exit 1
           fi
 

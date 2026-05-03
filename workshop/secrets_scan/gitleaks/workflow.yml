@@ -9,14 +9,18 @@
 # 1. Copy this entire job definition into .github/workflows/secrets-scan.yml
 # 2. Replace the current jobs: definition with this one
 # 3. The job will scan the current filesystem for secrets (not git history)
-# 4. The scan will fail if any secrets are found
-# 5. For production use, consider enabling git history scan (see OPTION 1 below)
+# 4. Results will be uploaded to GitHub Advanced Security (SARIF format)
+# 5. The scan will fail if any secrets are found
+# 6. For production use, consider enabling git history scan (see OPTION 1 below)
 # =============================================================================
 
 jobs:
   secrets-scan:
     name: Secrets Scan with Gitleaks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     outputs:
       result: ${{ steps.scan-result.outputs.result }}
     steps:
@@ -29,17 +33,38 @@ jobs:
         id: scan-tool
         run: |
           # Install Gitleaks
-          wget -O /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          wget -q -O /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp/
           sudo mv /tmp/gitleaks /usr/local/bin/
 
           # OPTION 1: Scan entire git history + current filesystem (recommended for production CI)
           # NOTE: This option may require cleaning git history if secrets are found in past commits
-          # gitleaks detect --source . --verbose --exit-code 1
+          # gitleaks detect --source . --verbose --report-format sarif --report-path gitleaks.sarif --exit-code 1
 
           # OPTION 2: Scan only current filesystem without git history (WORKSHOP DEFAULT)
           # This option is used for the workshop as it focuses on current code without requiring git history cleanup
-          gitleaks detect --source . --no-git --verbose --exit-code 1
+          gitleaks detect --source . --no-git --verbose --report-format sarif --report-path gitleaks.sarif --exit-code 1
+
+      - name: Summarize findings
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        run: |
+          SARIF=gitleaks.sarif
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Gitleaks finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
 
       - name: Set scan result
         id: scan-result
@@ -51,5 +76,10 @@ jobs:
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ Secrets scan failed - secrets detected in repository"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
             exit 1
           fi

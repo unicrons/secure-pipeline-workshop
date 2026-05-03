@@ -38,10 +38,17 @@ jobs:
           quiet: true
           output_format: sarif
 
-      - name: Summarize findings
+      - name: Normalize SARIF paths to repo root
         if: always() && hashFiles('results.sarif') != ''
+        # Checkov emits paths relative to --directory; rewrite to repo-root so GHAS can map findings to the PR diff.
         run: |
-          SARIF=results.sarif
+          jq '(.runs[].results[].locations[].physicalLocation.artifactLocation.uri) |= "infra/" + .' \
+            results.sarif > checkov.sarif
+
+      - name: Summarize findings
+        if: always() && hashFiles('checkov.sarif') != ''
+        run: |
+          SARIF=checkov.sarif
           COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
           if [ "${COUNT:-0}" -eq 0 ]; then
             echo "✅ No security alerts"
@@ -53,10 +60,10 @@ jobs:
           fi
 
       - name: Upload SARIF to GitHub Code Scanning
-        if: always() && hashFiles('results.sarif') != ''
+        if: always() && hashFiles('checkov.sarif') != ''
         uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
         with:
-          sarif_file: results.sarif
+          sarif_file: checkov.sarif
           category: checkov-iac
 
       - name: Set scan result

@@ -8,65 +8,18 @@ on:
         value: ${{ jobs.iac-scan.outputs.result }}
 
 jobs:
+  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
+  # Copy from: workshop/iac_scan/{tool}/workflow.yml
+
   iac-scan:
-    name: IAC Scan with Checkov
+    name: "🚧 IAC Scan - Workshop Placeholder"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
     outputs:
-      result: ${{ steps.scan-result.outputs.result }}
+      result: ${{ steps.placeholder.outputs.result }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Run Checkov IAC scanner
-        id: scan-tool
-        uses: bridgecrewio/checkov-action@99bb2caf247dfd9f03cf984373bc6043d4e32ebf # v12.1347.0
-        with:
-          directory: infra/
-          framework: terraform
-          quiet: true
-          output_format: sarif
-
-      - name: Summarize findings
-        if: always() && hashFiles('results.sarif') != ''
+      - name: Workshop Placeholder
+        id: placeholder
         run: |
-          SARIF=results.sarif
-          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
-          if [ "${COUNT:-0}" -eq 0 ]; then
-            echo "✅ No security alerts"
-          else
-            echo "❌ Found $COUNT Checkov finding(s):"
-            jq -r '.runs[].results[] |
-              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
-              "$SARIF"
-          fi
-
-      - name: Upload SARIF to GitHub Code Scanning
-        if: always() && hashFiles('results.sarif') != ''
-        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
-        with:
-          sarif_file: results.sarif
-          category: checkov-iac
-
-      - name: Set scan result
-        id: scan-result
-        if: always()
-        run: |
-          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
-            echo "result=success" >> "$GITHUB_OUTPUT"
-            echo "✅ IAC scan passed - no security issues found"
-          else
-            echo "result=failure" >> "$GITHUB_OUTPUT"
-            echo "❌ IAC scan failed - security issues detected"
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
-            else
-              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
-            fi
-            exit 1
-          fi
+          echo "🚧 Replace this job with content from workshop/iac_scan/{tool}/workflow.yml!"
+          echo "This will implement: Infrastructure security scan with your chosen tool"
+          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"

@@ -87,6 +87,11 @@ jobs:
           if [ "${COUNT:-0}" -gt 0 ]; then
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ CodeQL found $COUNT security alert(s)"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
             exit 1
           else
             echo "result=success" >> "$GITHUB_OUTPUT"

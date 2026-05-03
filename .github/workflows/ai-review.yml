@@ -1,0 +1,24 @@
+name: AI Security Review
+
+on:
+  workflow_call:
+    secrets:
+      GEMINI_API_KEY:
+        required: false
+
+jobs:
+  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
+  # Copy from: workshop/ai_review/{tool}/workflow.yml
+
+  ai-review:
+    name: "🚧 AI Review - Workshop Placeholder"
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.placeholder.outputs.result }}
+    steps:
+      - name: Workshop Placeholder
+        id: placeholder
+        run: |
+          echo "🚧 Replace this job with content from workshop/ai_review/{tool}/workflow.yml!"
+          echo "This will implement: AI-powered security review of application code on every PR"
+          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"

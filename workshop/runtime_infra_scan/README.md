@@ -2,7 +2,7 @@
 
 > ⏱ ~10 min (read-only) / ~25 min (live AWS) · 📍 Module 6 of 7
 >
-> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ **6** ▸ [7](../ai_scan/)
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ **6** ▸ [7](../ai_review/)
 
 > [!IMPORTANT]
 > This module needs **a live AWS account** (IAM role + GitHub OIDC trust). Without it,

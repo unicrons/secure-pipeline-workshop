@@ -2,7 +2,7 @@
 
 > ⏱ ~15 min · 📍 Module 5 of 7
 >
-> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ **5** ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ **5** ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_review/)
 
 This workshop module focuses on scanning Infrastructure as Code (IaC) configurations to identify security misconfigurations before infrastructure deployment.
 

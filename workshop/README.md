@@ -72,7 +72,7 @@ We suggest you follow the workshop in the following order, but feel free to jump
 4. [Container Security Scan](container_scan/)
 5. [Infrastructure as Code Security Scan](iac_scan/)
 6. [Runtime Infrastructure Scan](runtime_infra_scan/)
-7. [AI Security Analysis](ai_scan/)
+7. [AI Security Review](ai_review/)
 
 ## Prerequisites
 
@@ -87,6 +87,8 @@ Before you start:
 
    > Prefer your own editor? `git clone https://github.com/<your-user>/secure-pipeline-workshop.git && cd secure-pipeline-workshop && git checkout -b workshop`. Everything else applies the same way.
 
+   > After your first push, open a PR from `workshop` → your fork's `main`. The orchestrator runs as PR checks; every subsequent push to `workshop` updates the same PR — you don't open it again.
+
 3. **(Optional) Enable GitHub Advanced Security on your fork** — some tools (Semgrep, Grype, Trivy IaC) upload SARIF for the *Code Scanning* tab. The job log already shows full findings (rule, message, file, line) regardless — GHAS just adds a richer UI on top.
 
 4. **Per-module secrets and variables** — most modules work out of the box. The ones that don't:
@@ -95,6 +97,7 @@ Before you start:
    |---|---|---|
    | 2. Code Scan | `NVD_API_KEY` *(secret, optional but recommended for OWASP Dependency Check)* | [Request from NVD](https://nvd.nist.gov/developers/request-an-api-key) |
    | 6. Runtime Infra Scan | `AWS_IAM_ROLE_ARN` *(secret)*, `AWS_REGION` + `AWS_IAM_ROLE_SESSION_DURATION` *(vars)* | IAM role with `SecurityAudit` + `ViewOnlyAccess` and a GitHub OIDC trust policy |
+   | 7. AI Security Review | `GEMINI_API_KEY` *(secret)* | [Google AI Studio → Create API key](https://aistudio.google.com/apikey) (free tier, no credit card) |
 
    Configure them at `Settings → Secrets and variables → Actions` on your fork.
 
@@ -104,15 +107,12 @@ For each module:
 
 1. **Read** the module's `README.md` for context (why, common issues, tools available).
 2. **Pick a tool** and open `workshop/<module>/<tool>/workflow.yml`. The header comments list any extra prerequisites for that tool.
-3. **Replace** the entire `jobs:` section of `.github/workflows/<module>-scan.yml` with the `jobs:` section from the tool's `workflow.yml`. Keep the file's `name:`, `on:`, `inputs:`, `secrets:`, and `outputs:` blocks intact.
-4. **Commit and push** to your `workshop` branch.
-5. **Open a Pull Request** from `workshop` → your fork's `main`. GitHub shows a *"Compare & pull request"* banner right after the push — one click. The orchestrator runs as PR checks, so you can watch the whole pipeline directly from the PR's *Checks* tab without leaving the page. Every additional push to `workshop` re-runs the checks on the same PR (no need to reopen anything).
-6. **Read the failure**: each module ships with a planted **bait** (a misconfiguration or vulnerable line) the scanner is meant to catch. The job log points at the file and line. If you get stuck, the module's `Solutions` section is your safety net.
-7. **Fix the bait** and push again until the job goes green ✅.
-8. **(Optional)** Try a second tool in the same module — it usually flags the same bait, so the existing fix clears it too.
-9. **Move on** to the next module.
+3. **Replace** the `jobs:` section of `.github/workflows/<module>-scan.yml` with the snippet's `jobs:` section. Keep the file's `name:`, `on:`, `inputs:`, `secrets:`, and `outputs:` blocks intact.
+4. **Commit and push** to your `workshop` branch. The orchestrator re-runs on your open PR — watch the *Checks* tab.
+5. **Read the failure**: each module ships with a planted **bait** (a misconfiguration or vulnerable line) the scanner is meant to catch. The job log points at the file and line. If you get stuck, the module's `Solutions` section is the safety net.
+6. **Fix the bait** and push again until the job goes green ✅. *(Optional: try a second tool in the same module — it usually flags the same bait.)*
 
-> ℹ️ **The orchestrator runs every module's job on every push.** Modules whose placeholder you haven't replaced stay green by design (the placeholder just echoes a message). Focus on the job for the module you're working on.
+> ℹ️ Modules whose placeholder you haven't replaced stay green by design (the placeholder just echoes a message). Focus on the job for the module you're working on.
 
 > ℹ️ **Module 6 exception**: the runtime infra scan runs against a *live AWS account*, so there's no planted bait to fix. It's expected to pass green even when Prowler reports findings — see its `Running this module` section.
 

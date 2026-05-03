@@ -2,7 +2,7 @@
 
 > ⏱ ~15 min · 📍 Module 4 of 7
 >
-> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ **4** ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
+> [1](../pipeline_scan/) ▸ [2](../code_scan/) ▸ [3](../secrets_scan/) ▸ **4** ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_review/)
 
 This workshop module covers container security scanning to identify vulnerabilities in container images and configurations.
 

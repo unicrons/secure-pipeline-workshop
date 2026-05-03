@@ -39,7 +39,7 @@ Analyze Terraform and other IaC definitions for security issues before they are 
 ### 6. ☁️ [Runtime Infrastructure Scan (live cloud)](workshop/runtime_infra_scan/)
 Scan a live AWS account for misconfigurations and drift that static IaC scans can't catch.
 
-### 7. 🤖 [AI Security Analysis](workshop/ai_scan/) *(optional)*
+### 7. 🤖 [AI Security Review](workshop/ai_review/) *(optional)*
 Leverage AI to perform comprehensive, context-aware security reviews of pull requests.
 
 ---

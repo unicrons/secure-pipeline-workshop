@@ -31,6 +31,15 @@ jobs:
     needs: pipeline-scan
     uses: ./.github/workflows/iac-scan.yml
 
+  ai-review:
+    needs: pipeline-scan
+    uses: ./.github/workflows/ai-review.yml
+    permissions:
+      contents: read
+      pull-requests: write
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
   build-and-container-scan:
     needs: [code-scan, secrets-scan]
     permissions:

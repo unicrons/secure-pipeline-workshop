@@ -2,7 +2,7 @@
 
 > ⏱ ~25 min (SAST + SCA) · 📍 Module 2 of 7
 >
-> [1](../pipeline_scan/) ▸ **2** ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_scan/)
+> [1](../pipeline_scan/) ▸ **2** ▸ [3](../secrets_scan/) ▸ [4](../container_scan/) ▸ [5](../iac_scan/) ▸ [6](../runtime_infra_scan/) ▸ [7](../ai_review/)
 
 > [!IMPORTANT]
 > **This module is the only one with two placeholders.** `.github/workflows/code-scan.yml`

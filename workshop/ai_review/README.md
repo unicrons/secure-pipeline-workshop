@@ -8,28 +8,21 @@ This workshop module adds an AI step to the pipeline that reviews application co
 
 ## Why is AI Code Review Important?
 
-SAST, SCA, secrets scanners and IaC scanners are pattern matchers. They are excellent at what they were built for: rules, signatures, AST queries, known-vulnerable versions. But there are entire classes of issues that fall outside their reach.
-
-- **Fix-incomplete traps** — closing the obvious sink while leaving an adjacent issue open (e.g. parameterising a SQL query on one call site but still concatenating on two others). The pattern rule that triggered on the first sink is now silent; the bypass still works.
-- **Cross-function taint flows** — user input that reaches a sink across three function calls and a closure. AST-based rules typically operate on a single function or file at a time and lose the trail.
-- **Intent and design issues** — an endpoint that performs a sensitive action without authentication, an error path that silently swallows misconfiguration. No regex flags these; a reader who understands the code does.
-- **Best-practice drift** — deprecated security headers linger long after browsers stopped honouring them; an IAM policy uses a wildcard action; a cookie misses `Secure` or `HttpOnly`. Each is contextual; rule packs cover some but not all.
-
-A large language model with the source file in its context window reads the code the way a human reviewer would. It complements the deterministic stack from modules 1-6, but its output can hallucinate or restate what scanners already found — treat it as input to triage rather than authority.
+SAST, SCA, secrets scanners and IaC scanners are pattern matchers. They are excellent at what they were built for: rules, signatures, AST queries, known-vulnerable versions. But there are entire classes of issues that fall outside their reach — and that's where an LLM reading the file in context can complement them.
 
 > [!TIP]
-> Treat AI findings as input to triage, not as merge-blockers. Pair them with a human review and the deterministic SARIF from prior modules. Two signals beat one.
+> Treat AI findings as input to triage, not as merge-blockers. Output can hallucinate or restate what scanners already found. Pair AI review with the deterministic SARIF from prior modules and a human reviewer.
 
 ## Common Issues AI Catches That Scanners Don't
 
 ### Fix-Incomplete Traps
-A developer addresses one signature-flagged issue but leaves an adjacent vulnerability open. The scanner is now green; the application is still broken. AI sees the broader function and notices the gap.
+A developer closes the obvious sink while leaving an adjacent issue open — e.g. parameterising a SQL query on one call site but still concatenating on two others. The pattern rule that triggered on the first sink is now silent; the bypass still works. AI sees the broader function and notices the gap.
 
 ### Cross-Function Taint Flows
-User input enters at one function, is passed through a helper, mutated by a third, and reaches a sink. Rules that operate per-function lose the trail; an LLM with the file in context follows it.
+User input enters at one function, is passed through a helper, mutated by a third, and reaches a sink. AST-based rules that operate per-function lose the trail; an LLM with the file in context follows it.
 
 ### Authentication & Authorization Gaps
-"This endpoint reads files. There is no auth check before the read." This is design-level, not pattern-level — exactly where AI complements scanners.
+"This endpoint reads files. There is no auth check before the read." Design-level intent issues — exactly where AI complements scanners.
 
 ### Deprecated or Missing Best Practices
 `X-XSS-Protection` headers, missing CSP, weak cookie attributes, deprecated crypto APIs. The list shifts year to year; an up-to-date model knows what 2026 best practice looks like.
@@ -70,13 +63,12 @@ In your fork on GitHub:
 
 > 🔗 Direct path: `https://github.com/<your-user>/secure-pipeline-workshop/settings/secrets/actions/new`
 
-### 3. Privacy disclaimer
-
-This module sends the contents of `code/src/simple-app.js` to Google's Gemini API.
-
-- **On the free tier, Google may use your inputs and outputs to improve their models.** ([Gemini API terms](https://ai.google.dev/gemini-api/terms))
-- ✅ **Fine for this workshop.** The code is a deliberate, public sample. The `AKIA…` literals in `simple-app.js` are didactic — not real, not validated against AWS.
-- ❌ **Not for real proprietary code.** For production use, switch to a paid tier (which excludes your data from training) or self-host an open-weight model.
+> [!IMPORTANT]
+> **Privacy disclaimer.** This module sends the contents of `code/src/simple-app.js` to Google's Gemini API.
+>
+> - On the free tier, Google may use your inputs and outputs to improve their models ([Gemini API terms](https://ai.google.dev/gemini-api/terms)).
+> - ✅ **Fine for this workshop.** The code is a deliberate, public sample; the `AKIA…` literals are didactic — not real, not validated against AWS.
+> - ❌ **Not for real proprietary code.** For production, switch to a paid tier (which excludes your data from training) or self-host an open-weight model.
 
 ## Learning Objectives
 

@@ -28,10 +28,10 @@ Container security scanning analyzes images and container configurations to iden
 
 ## Tools Used in This Module
 
-- [**Trivy**](https://github.com/aquasecurity/trivy) - Vulnerability, misconfiguration and secret scanner for containers
-  - Also supports scanning filesystems, IaC or repos, but we focus on containers for this module
-- [**Grype**](https://github.com/anchore/grype) - Fast vulnerability scanner for container images and filesystems
-  - Developed by Anchore, uses multiple vulnerability databases and generates SBOM automatically
+| Tool | What it does | Notes |
+|---|---|---|
+| [**Trivy**](https://github.com/aquasecurity/trivy) | Vulnerability, misconfiguration and secret scanner for containers | Also scans filesystems, IaC and repos; this module focuses on containers |
+| [**Grype**](https://github.com/anchore/grype) | Fast vulnerability scanner for container images and filesystems | By Anchore; uses multiple vuln DBs and generates SBOM automatically |
 
 ## Learning Objectives
 

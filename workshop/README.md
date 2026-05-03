@@ -2,7 +2,7 @@
 
 > ⏱ **Estimated time:** 2–3 hours self-paced (~20 min per module).
 
-This workshop is designed to help you understand the importance of shift-left security and how to implement comprehensive security scanning in your pipeline.
+This workshop is designed to help you understand the importance of shift-left security and how to implement security scanning across your pipeline.
 
 All of this without forgetting the human factor, as the final objective is not blind security but enabling your users (or yourself) to build secure software effectively.
 

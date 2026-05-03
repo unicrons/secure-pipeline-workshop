@@ -7,15 +7,15 @@
 This workshop module focuses on scanning Infrastructure as Code (IaC) configurations to identify security misconfigurations before infrastructure deployment.
 
 ## Why is IaC Security Important?
-This is a key step in our shift-left security approach. In the same way we analyze our application code before deploying it, we should do the same with our infrastructure code.
+This is a key step in our shift-left security approach. Just as we analyze our application code before deploying, we should do the same with our infrastructure code.
 
 IaC security scanning analyzes infrastructure definitions (Terraform, CloudFormation, Kubernetes YAML, etc.) to identify security misconfigurations, compliance violations, and best practice deviations before resources are provisioned.
 
-This step has its limitations, as some issues can only be detected at runtime, but everything we can catch before the resources are deployed will be easier to fix and will provide a faster feedback loop.
+Some issues can only be detected at runtime — see the [Runtime Infrastructure Scan](../runtime_infra_scan/) module — but everything caught at this stage is cheaper to fix.
 
 ## Common IaC Security Issues
 
-Many of these issues are shared with the [Infrastructure Runtime Security](../runtime_infra_scan/) module.
+> The catalog of issues here overlaps heavily with the [Runtime Infrastructure Scan](../runtime_infra_scan/) module. The list below is the IaC-side view; the runtime module covers the same categories from a deployed-resources perspective plus drift.
 
 ### Access Control
 - **Overly Permissive IAM Policies** – wildcard privileges and never-used rights that violate least-privilege.
@@ -32,30 +32,23 @@ Many of these issues are shared with the [Infrastructure Runtime Security](../ru
 ### Network Security
 - **Open Security Groups (0.0.0.0/0)** – internet-wide access to SSH, RDP, or high-risk custom ports.
 - **Public-Subnet Exposure** – instances or containers with public IPs sitting in public subnets.
-- **Mis-scoped Load Balancers/Endpoints** – “internal” services accidentally reachable from the internet.
+- **Mis-scoped Load Balancers/Endpoints** – "internal" services accidentally reachable from the internet.
+
+### IaC Tooling & Process
+- **Unencrypted Remote State** – Terraform/Pulumi state files holding sensitive data without server-side encryption or proper access control.
+- **Missing State Locking** – concurrent runs corrupting state.
+- **Unpinned Providers / Untrusted Modules** – third-party modules pulled by floating refs, opening a supply-chain path.
 
 ### Compliance & Governance
 - **Insufficient Logging & Audit Trails** – generating blind spots for forensics and incident response.
-- **Lack of Continuous Monitoring/Alerts** – misconfigurations persist until breach or audit.
 - **Missing Resource Tagging** – untagged assets break cost, ownership, and policy enforcement.
-- **Improper Backup Retention/Encryption** – backups stored unencrypted or outside mandated retention windows.
-
-## Common IaC Recommendations
-
-In addition to scanning for infrastructure security issues, we must also ensure the security of our IaC tools and processes. Consider these recommendations:
-
-- **Remote State** - Use encrypted remote backends
-- **State Locking** - Prevent concurrent modifications
-- **Sensitive Variables** - Mark sensitive data appropriately
-- **Provider Versions** - Pin provider versions
-- **Module Security** - Vet third-party modules
 
 ## Tools Used in This Module
 
-- [**Checkov**](https://github.com/bridgecrewio/checkov) - Static analysis tool for Infrastructure as Code security scanning
-- [**Trivy**](https://github.com/aquasecurity/trivy) - Misconfiguration scanner for Infrastructure as Code
-  - Also supports scanning filesystems, containers or repos, but we focus on IaC for this module
-
+| Tool | What it does | Notes |
+|---|---|---|
+| [**Checkov**](https://github.com/bridgecrewio/checkov) | Static analysis tool for IaC security scanning | Terraform, CloudFormation, Kubernetes, ARM and more |
+| [**Trivy**](https://github.com/aquasecurity/trivy) | Misconfiguration scanner for IaC | Also scans containers/filesystems/repos; this module focuses on IaC |
 
 ## Learning Objectives
 
@@ -63,72 +56,17 @@ By the end of this module, you will:
 - Understand IaC security scanning principles
 - Learn to identify common misconfigurations
 
-
 ## Security Checklist
 
-### Access Control
-
-- [ ] Enforce **least privilege** on all IAM roles, users, and service accounts
-- [ ] Remove or refine **overly permissive policies** (wildcards, unused rights)
-- [ ] Disable **default credentials** and enforce strong password requirements
-- [ ] Require **MFA** for all administrative and sensitive accounts
-
-### Encryption
-
-- [ ] Enable **encryption at rest** for all storage, databases, and backups
-- [ ] Require **TLS/SSL** for all data in transit (APIs, internal/external services)
-- [ ] Regularly audit for **outdated cipher suites** or short encryption keys
-- [ ] Encrypt **environment files** and state files containing sensitive data
-
-### Secrets Management
-
-- [ ] Remove all **hardcoded secrets** and credentials from IaC templates and code
-- [ ] Store secrets in a **dedicated vault** or secret manager
-- [ ] Rotate and revoke secrets according to a documented schedule
-- [ ] Ensure CI/CD pipelines and scripts never expose secrets in logs
-
-### Network Security
-
-- [ ] Limit public exposure by closing all unnecessary **Security Groups** (no 0.0.0.0/0)
-- [ ] Place resources in **private subnets** unless public access is specifically required
-- [ ] Implement **network segmentation** with firewalls or network policies
-- [ ] Restrict **east–west traffic** (internal workloads) to the minimum necessary
-
-### Monitoring & Logging
-
-- [ ] Enable **comprehensive logging** (CloudTrail, audit logs, API logs)
-- [ ] Configure **continuous monitoring and alerting** for abnormal activity
-- [ ] Regularly review logs for signs of **unauthorized access or configuration drift**
-- [ ] Ensure logs are retained and protected in accordance with policy
-
-### Backup & Recovery
-
-- [ ] Implement regular **backup schedules** for databases, storage, and state files
-- [ ] **Encrypt all backups** and store copies in geographically separate locations
-- [ ] Test **disaster recovery procedures** periodically
-- [ ] Set **retention policies** that comply with business and regulatory requirements
-
-### Governance & Compliance
-
-- [ ] Tag all resources for **cost tracking, ownership, and lifecycle management**
-- [ ] Enable **automated checks** for regulatory compliance (GDPR, HIPAA, PCI-DSS)
-- [ ] Maintain up-to-date **audit trails** and documentation
-- [ ] Conduct regular **security reviews** and remediation of IaC configurations
-
-### Supply Chain & Container Security
-
-- [ ] Use only **trusted IaC modules** and dependencies—verify source and integrity
-- [ ] Scan all container and base images for **known vulnerabilities**
-- [ ] Restrict use of **public image registries** unless approved and scanned
-- [ ] Set **resource limits** and avoid privileged containers in orchestration
-
-### Change and State Management
-
-- [ ] Store state files in a **remote, encrypted backend** with locked access
-- [ ] Enable **state locking** to prevent concurrent modifications
-- [ ] Enforce **code review and approvals** before IaC changes are applied
-- [ ] Detect and remediate **configuration drift** between infrastructure and code
-
+- [ ] Enforce **least privilege** on IAM — no wildcard actions or unused permissions
+- [ ] No **0.0.0.0/0** ingress on sensitive ports; resources in private subnets unless public is required
+- [ ] **Encryption at rest and in transit** enabled for all storage, databases, backups and APIs
+- [ ] No **hardcoded secrets** in IaC — credentials live in a dedicated secret manager
+- [ ] **Logging and audit trails** enabled (CloudTrail, audit logs) with sane retention
+- [ ] **Resources tagged** for ownership, cost, and lifecycle management
+- [ ] **State files** stored in a remote, encrypted backend with locking enabled
+- [ ] **Modules and providers** pinned by SHA/version; third-party sources vetted
+- [ ] **Code review and approvals** required before IaC changes are applied
 
 ## References
 - [Infrastructure as Code (IaC) Security: 10 Best Practices](https://spacelift.io/blog/infrastructure-as-code-iac-security)

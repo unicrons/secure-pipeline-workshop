@@ -15,17 +15,12 @@
 
 This workshop module covers Static Application Security Testing (SAST) and Software Composition Analysis (SCA) to identify security vulnerabilities in application code and dependencies.
 
-## What is SAST (Static Application Security Testing)?
-
-SAST analyzes source code, bytecode, or binary code to identify security vulnerabilities without executing the program. It examines code patterns, data flow, and control flow to detect potential security issues.
-
-## What is SCA (Software Composition Analysis)?
-
-SCA identifies and analyzes open source components and third-party dependencies in applications to detect known vulnerabilities, license compliance issues, and outdated packages.
-
 ## Why is Code Security Important?
 
-Malicious actors can exploit vulnerabilities in your code to gain unauthorized access, steal sensitive data, or disrupt your systems.
+Vulnerabilities in your code or your dependencies are the path attackers take to gain unauthorized access, steal data, or disrupt your systems. Two complementary techniques cover the bulk of the surface:
+
+- **SAST (Static Application Security Testing)** — analyzes source code without executing it, looking at patterns, data flow and control flow to surface issues like injection, XSS or unsafe APIs.
+- **SCA (Software Composition Analysis)** — analyzes your open-source dependencies to flag known CVEs, outdated packages and license issues.
 
 ## Common Code Security Issues
 
@@ -47,22 +42,14 @@ Malicious actors can exploit vulnerabilities in your code to gain unauthorized a
 
 ## Tools Used in This Module
 
-### SAST tools
-
-- [**CodeQL**](https://github.com/github/codeql) - GitHub's semantic code analysis engine for deep security analysis
-  - [GitHub Action](https://github.com/github/codeql-action) | [Documentation](https://codeql.github.com/docs/)
-- [**Semgrep**](https://github.com/semgrep/semgrep) - Fast pattern-based security scanner with extensive rule sets
-  - [Documentation](https://semgrep.dev/docs/) | [Community Rules](https://semgrep.dev/explore)
+| Tool | Type | What it does | Notes |
+|---|---|---|---|
+| [**CodeQL**](https://github.com/github/codeql) | SAST | GitHub's semantic code analysis engine for deep security analysis | [Action](https://github.com/github/codeql-action) · [Docs](https://codeql.github.com/docs/) |
+| [**Semgrep**](https://github.com/semgrep/semgrep) | SAST | Fast pattern-based scanner with extensive rule sets | [Docs](https://semgrep.dev/docs/) · [Community rules](https://semgrep.dev/explore) |
+| [**osv-scanner**](https://github.com/google/osv-scanner) | SCA | Lockfile-based vulnerability scanner backed by [OSV.dev](https://osv.dev/) | [Action](https://github.com/google/osv-scanner-action) · [Docs](https://google.github.io/osv-scanner/) |
+| [**OWASP Dependency Check**](https://github.com/dependency-check/DependencyCheck) | SCA | OWASP SCA tool for known vulnerabilities in dependencies | Requires `NVD_API_KEY` ([request one](https://nvd.nist.gov/developers/request-an-api-key)) — without it, the scan may return 0 findings |
 
 > **Note**: Different ecosystems have specialized SAST tools (e.g., ESLint with security plugins for JavaScript, Bandit for Python, Brakeman for Ruby on Rails) that can provide more targeted analysis alongside general-purpose scanners.
-
-### SCA tools
-
-- [**osv-scanner**](https://github.com/google/osv-scanner) - Lockfile-based vulnerability scanner backed by the [OSV.dev](https://osv.dev/) database
-  - [GitHub Action](https://github.com/google/osv-scanner-action) | [Documentation](https://google.github.io/osv-scanner/)
-- [**OWASP Dependency Check**](https://github.com/dependency-check/DependencyCheck) - OWASP tool for Software Composition Analysis (SCA) to identify known vulnerabilities in dependencies
-  - [GitHub Action](https://github.com/dependency-check/Dependency-Check_Action) | [Documentation](https://jeremylong.github.io/DependencyCheck/)
-  - **Heads up**: Dependency Check requires an `NVD_API_KEY` to keep its CVE database up to date — see [NVD developers](https://nvd.nist.gov/developers/request-an-api-key). Without one, the scan may return 0 findings.
 
 ## Learning Objectives
 

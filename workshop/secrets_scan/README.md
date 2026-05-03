@@ -26,30 +26,37 @@ Secrets scan involves scanning code repositories, commit history, and configurat
 
 ### Common Types of Secrets
 
+GitGuardian detected **28.65M new hardcoded secrets** in public GitHub during 2025 (+34% YoY), with **AI-related credentials behind 8 of the 10 fastest-growing categories**. [^1]
+
+#### **AI / LLM Service Keys**
+- Core providers (OpenAI, Anthropic, Google AI, Mistral, xAI, DeepSeek), LLM infrastructure (RAG, orchestration, vector stores) and AI gateways (OpenRouter, Groq)
+- +81% YoY in 2025 — LLM infrastructure leaks growing **5× faster** than core providers
+#### **MCP Configuration Files**
+- Credentials embedded in Model Context Protocol server configs (API keys passed as CLI args or `env` blocks committed to version control)
+- 24,008 unique secrets exposed in public MCP configs in 2025 — top types: Google API, PostgreSQL, Firecrawl, Perplexity, Brave Search
 #### **Generic Credentials**
 - Hardcoded passwords, database connection strings, custom tokens, plaintext encryption keys
-- 58% of all detected secrets [^1]
+- The largest single bucket year after year, often slipping past specific-pattern detectors
 #### **Database Service Credentials**
 - MongoDB connection strings, MySQL/PostgreSQL credentials
-- 19% of public-repo leaks are MongoDB alone [^2]
+- Frequently bundled inside `.env` files or MCP `DATABASE_URI` fields
 #### **Cloud Provider Keys**
 - AWS IAM access keys, Google Cloud keys, Azure SAS tokens
-- AWS keys represent 8% of private-repo leaks [^2]
+- High blast radius — direct path to lateral movement in cloud accounts
 #### **Third-Party API Keys**
-- Google API, Stripe, Twilio, SendGrid, OpenWeatherMap tokens
-- OpenWeatherMap tokens among top 10 leaked services [^3]
+- Stripe, Twilio, SendGrid, payment processors, monitoring SaaS, etc.
+- Modern apps integrate dozens of these — each one a potential leak source
 #### **Messaging/Bot Tokens**
 - Telegram Bot tokens, Slack/Discord webhooks
-- Telegram Bot tokens account for 6.3% of public leaks [^1]
-#### **Gen-AI Service Keys**
-- OpenAI, HuggingFace, Gemini, Pinecone API keys
-- OpenAI key leaks grew 1,212× year-over-year [^4]
+- Used by attackers for impersonation, data exfiltration and social-engineering pivots
 #### **Private Cryptographic Material**
 - RSA/SSH private keys, JWT signing keys, TLS certificates
-- RSA private keys consistently rank in top-10 leak types
+- Consistently in the top-10 leak types
 #### **OAuth/Personal Access Tokens**
-- GitHub PATs, GitLab tokens
-- Detected hundreds of times daily, classified as "highly critical" in 41% of cases [^4]
+- GitHub PATs, fine-grained PATs, GitLab tokens
+- Frequently classified as critical — the Shai-Hulud 2 supply-chain attack alone harvested 581 GitHub PATs + 386 OAuth tokens from compromised dev machines in 2025
+
+> ⚠️ **Detection ≠ remediation.** **64% of secrets confirmed valid in 2022 are still valid in 2026.** [^1] Pair detection with a clear rotation/revocation playbook.
 
 ### Other types of secrets or sensitive data
 There are other types of secrets or sensitive data that may not be covered by the tools we will use in this workshop, but that are still important to keep in mind:
@@ -65,8 +72,10 @@ There are other types of secrets or sensitive data that may not be covered by th
 
 ## Tools Used in This Module
 
-- [**TruffleHog**](https://github.com/trufflesecurity/trufflehog) - Git history secrets scanner that finds credentials, API keys, and other secrets
-- [**Gitleaks**](https://github.com/gitleaks/gitleaks) - Git history and filesystem secrets scanner for detecting hardcoded secrets
+| Tool | What it does | Notes |
+|---|---|---|
+| [**TruffleHog**](https://github.com/trufflesecurity/trufflehog) | Git history secrets scanner | Verifies findings against live providers when possible |
+| [**Gitleaks**](https://github.com/gitleaks/gitleaks) | Git history and filesystem secrets scanner | Rule-based; tunable via `.gitleaks.toml` |
 
 ## Learning Objectives
 
@@ -89,13 +98,10 @@ By the end of this module, you will:
 - [ ] Regular secrets auditing process
 
 ## References
-- [The State of Secrets Sprawl 2025](https://www.gitguardian.com/state-of-secrets-sprawl-report-2025): "In 2024 GitGuardian scanned 69.6M public repositories of which at least 4.61% contained a secret."
-- [How did Openai detect that my API key was pushed to GitHub?](https://www.reddit.com/r/OpenAI/comments/zotyq4/how_did_openai_detect_that_my_api_key_was_pushed/): Reddit user surprised because OpenAI contacted him seconds after pushing an API key to GitHub.
+- [GitGuardian — The State of Secrets Sprawl 2026](https://www.gitguardian.com/state-of-secrets-sprawl-report): the 5th-edition report covering AI-fueled leaks, MCP configuration sprawl and credential persistence trends.
+- [How did OpenAI detect that my API key was pushed to GitHub?](https://www.reddit.com/r/OpenAI/comments/zotyq4/how_did_openai_detect_that_my_api_key_was_pushed/): Reddit user surprised because OpenAI contacted him seconds after pushing an API key to GitHub.
 
-[^1]: [23 million secrets spilled on GitHub, developers naively assume no one will know](https://cybernews.com/security/developers-hardcoding-secrets-github-risk/)
-[^2]: [Analysis of GitHub Repositories Surfaces Nearly 23M Secrets](https://devops.com/analysis-of-github-repositories-surfaces-nearly-23m-secrets/)
-[^3]: [Over 12 million auth secrets and keys leaked on GitHub in 2023](https://www.bleepingcomputer.com/news/security/over-12-million-auth-secrets-and-keys-leaked-on-github-in-2023/)
-[^4]: [The State of Secrets Sprawl 2024](https://securityboulevard.com/2024/03/the-state-of-secrets-sprawl-2024/)
+[^1]: [GitGuardian — The State of Secrets Sprawl 2026](https://www.gitguardian.com/state-of-secrets-sprawl-report)
 
 ## Solutions (spoilers — open only when stuck)
 

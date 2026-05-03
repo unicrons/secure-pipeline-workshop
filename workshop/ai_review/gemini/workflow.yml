@@ -144,7 +144,7 @@ jobs:
             const fs = require('fs');
             const { summary, findings } = JSON.parse(fs.readFileSync('findings.json', 'utf8'));
 
-            const sevEmoji = { Critical: '🔴', High: '🟠', Medium: '🟡', Low: '🟢', Info: '⚪' };
+            const sevEmoji = { Critical: '🔴', High: '🟠', Medium: '🟡', Low: '🔵', Info: '⚪' };
 
             const renderFinding = (f) => [
               `<details>`,

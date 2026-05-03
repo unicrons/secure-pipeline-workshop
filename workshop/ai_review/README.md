@@ -105,10 +105,20 @@ By the end of this module, you will:
 - [Finding vulnerabilities in modern web apps using Claude Code and OpenAI Codex](https://semgrep.dev/blog/2025/finding-vulnerabilities-in-modern-web-apps-using-claude-code-and-openai-codex)
 
 ### Other Tools
-- [**Anthropic Claude**](https://docs.claude.com/en/api/overview) via [`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action) — agentic review with tool use
-- [**OpenAI GPT**](https://platform.openai.com/docs/api-reference) — comparable capability via the OpenAI API
-- [**GitHub Copilot Autofix**](https://docs.github.com/en/code-security/code-scanning/managing-code-scanning-alerts/about-autofix-for-code-scanning) — free for public repos with GHAS, surfaces fix proposals on CodeQL alerts directly in the Code Scanning tab. Complementary to this module.
-- [**Snyk Code AI**](https://snyk.io/product/snyk-code/) — commercial, integrates with PR review
+
+**Open-source / self-hosted** — when code must not leave your infrastructure:
+- [**PR-Agent**](https://github.com/qodo-ai/pr-agent) (Qodo, AGPL-3.0) — full-featured OSS AI code-review action; pluggable LLM backend with your own keys.
+- [**Ollama**](https://ollama.com/) running open-weight code models on a self-hosted runner: [Qwen2.5-Coder](https://qwenlm.github.io/blog/qwen2.5-coder-family/), [Llama 3.x](https://www.llama.com/), [DeepSeek-Coder](https://github.com/deepseek-ai/DeepSeek-Coder), [Codestral](https://mistral.ai/news/codestral-25-01). Same `responseSchema` pattern as this module's snippet, no third-party API call.
+
+**Open-weight models, hosted** — same models, served via an API (free tiers, no self-hosting):
+- [**Groq**](https://groq.com/) — Llama / Qwen / Mixtral on custom hardware (LPUs), OpenAI-compatible API, generous free tier without a credit card.
+- [**Together AI**](https://www.together.ai/), [**Fireworks AI**](https://fireworks.ai/) — broader catalogs of open-weight models behind a single API.
+
+**GitHub-native (free):**
+- [**Copilot Autofix**](https://docs.github.com/en/code-security/code-scanning/managing-code-scanning-alerts/about-autofix-for-code-scanning) — free for public repos with GHAS, surfaces fix proposals on CodeQL alerts directly in the *Code Scanning* tab. Complementary to this module.
+
+**Commercial APIs (closed-weight models):**
+- [**Anthropic Claude**](https://docs.claude.com/en/api/overview) via [`claude-code-action`](https://github.com/anthropics/claude-code-action) — agentic review with tool use. For *opt-in* invocation instead of a pipeline step, `claude-code-action` also gates on `issue_comment` slash commands (e.g. `/claude review`) — out of scope for this module, but a worked example of the chat-driven pattern.
 
 ## Solutions (spoilers — open only when stuck)
 

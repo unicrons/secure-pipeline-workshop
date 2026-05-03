@@ -9,13 +9,17 @@
 # 1. Copy this entire job definition into .github/workflows/iac-scan.yml
 # 2. Replace the current jobs: definition with this one
 # 3. The job will automatically scan all terraform files in infra/
-# 4. The scan will fail if any security issues are found
+# 4. Results will be uploaded to GitHub Advanced Security (SARIF format)
+# 5. The scan will fail if any security issues are found
 # =============================================================================
 
 jobs:
   iac-scan:
     name: IAC Scan with Checkov
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     outputs:
       result: ${{ steps.scan-result.outputs.result }}
     steps:
@@ -32,6 +36,29 @@ jobs:
           directory: infra/
           framework: terraform
           quiet: true
+          output_format: sarif
+          output_file_path: checkov-results
+
+      - name: Summarize findings
+        if: always() && hashFiles('checkov-results/results_sarif.sarif') != ''
+        run: |
+          SARIF=checkov-results/results_sarif.sarif
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Checkov finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('checkov-results/results_sarif.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: checkov-results/results_sarif.sarif
+          category: checkov-iac
 
       - name: Set scan result
         id: scan-result
@@ -43,5 +70,10 @@ jobs:
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ IAC scan failed - security issues detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
             exit 1
           fi

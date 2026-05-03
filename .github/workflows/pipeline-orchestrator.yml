@@ -30,6 +30,10 @@ jobs:
   iac-scan:
     needs: pipeline-scan
     uses: ./.github/workflows/iac-scan.yml
+    permissions:
+      security-events: write
+      contents: read # only needed for private repos
+      actions: read # only needed for private repos
 
   ai-review:
     needs: pipeline-scan

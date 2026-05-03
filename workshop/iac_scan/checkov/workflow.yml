@@ -37,12 +37,11 @@ jobs:
           framework: terraform
           quiet: true
           output_format: sarif
-          output_file_path: checkov-results
 
       - name: Summarize findings
-        if: always() && hashFiles('checkov-results/results_sarif.sarif') != ''
+        if: always() && hashFiles('results.sarif') != ''
         run: |
-          SARIF=checkov-results/results_sarif.sarif
+          SARIF=results.sarif
           COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
           if [ "${COUNT:-0}" -eq 0 ]; then
             echo "✅ No security alerts"
@@ -54,10 +53,10 @@ jobs:
           fi
 
       - name: Upload SARIF to GitHub Code Scanning
-        if: always() && hashFiles('checkov-results/results_sarif.sarif') != ''
+        if: always() && hashFiles('results.sarif') != ''
         uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
         with:
-          sarif_file: checkov-results/results_sarif.sarif
+          sarif_file: results.sarif
           category: checkov-iac
 
       - name: Set scan result

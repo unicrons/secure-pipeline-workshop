@@ -13,6 +13,7 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      actions: read
 
   code-scan:
     needs: pipeline-scan
@@ -20,6 +21,7 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      actions: read
 
   secrets-scan:
     needs: pipeline-scan
@@ -27,6 +29,7 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      actions: read
 
   iac-scan:
     needs: pipeline-scan
@@ -46,6 +49,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
+      actions: read
     uses: ./.github/workflows/build-and-container-scan.yml
 
   deploy-infrastructure:

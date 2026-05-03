@@ -12,24 +12,21 @@ jobs:
     uses: ./.github/workflows/pipeline-scan.yml
     permissions:
       security-events: write
-      contents: read # only needed for private repos
-      actions: read # only needed for private repos
+      contents: read
 
   code-scan:
     needs: pipeline-scan
     uses: ./.github/workflows/code-scan.yml
     permissions:
       security-events: write
-      contents: read # only needed for private repos
-      actions: read # only needed for private repos
+      contents: read
 
   secrets-scan:
     needs: pipeline-scan
     uses: ./.github/workflows/secrets-scan.yml
     permissions:
       security-events: write
-      contents: read # only needed for private repos
-      actions: read # only needed for private repos
+      contents: read
 
   iac-scan:
     needs: pipeline-scan
@@ -49,7 +46,6 @@ jobs:
     permissions:
       contents: read
       security-events: write
-      actions: read
     uses: ./.github/workflows/build-and-container-scan.yml
 
   deploy-infrastructure:

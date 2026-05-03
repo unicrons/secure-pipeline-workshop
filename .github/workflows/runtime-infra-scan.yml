@@ -21,17 +21,79 @@ on:
         value: ${{ jobs.runtime-infra-scan.outputs.result }}
 
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/runtime_infra_scan/{tool}/workflow.yml
   runtime-infra-scan:
-    name: "🚧 Runtime Infrastructure Scan - Workshop Placeholder"
+    name: Runtime Infrastructure Scan with Prowler
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Check out code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+        with:
+            role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+            role-session-name: ProwlerSession
+            aws-region: ${{ vars.AWS_REGION }}
+            role-duration-seconds: ${{ vars.AWS_IAM_ROLE_SESSION_DURATION }}
+            mask-aws-account-id: true
+
+      - name: Install Prowler
         run: |
-          echo "🚧 Replace this job with content from workshop/runtime_infra_scan/{tool}/workflow.yml!"
-          echo "This will implement: Runtime infrastructure scan with your chosen tool"
-          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"
+            pipx install prowler
+            prowler -v
+
+      - name: Run Prowler
+        id: prowler
+        run: |
+            prowler aws --service iam s3 --output-formats html sarif -z
+        continue-on-error: true
+
+      - name: Summarize findings
+        if: always() && hashFiles('output/*.sarif') != ''
+        run: |
+          SARIF=$(ls output/*.sarif | head -1)
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Prowler finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('output/*.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: output
+          category: prowler
+
+      - name: Upload Prowler HTML Report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: prowler-html-report
+          path: output/*.html
+          retention-days: 3
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.prowler.outcome }}" == "success" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Pipeline scan passed"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Pipeline scan failed"
+          fi

@@ -65,6 +65,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      security-events: write
+      actions: read
     secrets:
       AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
 

@@ -17,14 +17,20 @@
 # TO USE THIS JOB:
 # 1. Copy this entire job definition into .github/workflows/runtime-infra-scan.yml
 # 2. Replace the current jobs: definition with this one
-# 3. The job will automatically scan all terraform files in infra/
-# 4. The scan will fail if any security issues are found in the infrastructure
+# 3. The job will assume the configured AWS role and scan iam + s3 services
+# 4. Results will be uploaded to GitHub Advanced Security (SARIF format)
+# 5. The HTML report is also uploaded as an artifact for browsing offline
+# 6. The scan does NOT fail the job (-z flag) — see workshop README for why
 # =============================================================================
 
 jobs:
   runtime-infra-scan:
     name: Runtime Infrastructure Scan with Prowler
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
     outputs:
       result: ${{ steps.scan-result.outputs.result }}
     steps:
@@ -51,12 +57,29 @@ jobs:
       - name: Run Prowler
         id: prowler
         run: |
-            prowler aws --service iam s3 --output-formats html -z
+            prowler aws --service iam s3 --output-formats html sarif -z
         continue-on-error: true
 
-      - name: Message
+      - name: Summarize findings
+        if: always() && hashFiles('output/*.sarif') != ''
         run: |
-            echo "Prowler run completed"
+          SARIF=$(ls output/*.sarif | head -1)
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Prowler finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('output/*.sarif') != ''
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: output
+          category: prowler
 
       - name: Upload Prowler HTML Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

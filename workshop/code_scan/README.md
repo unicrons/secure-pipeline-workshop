@@ -47,7 +47,7 @@ Vulnerabilities in your code or your dependencies are the path attackers take to
 | [**CodeQL**](https://github.com/github/codeql) | SAST | GitHub's semantic code analysis engine for deep security analysis | [Action](https://github.com/github/codeql-action) · [Docs](https://codeql.github.com/docs/) |
 | [**Semgrep**](https://github.com/semgrep/semgrep) | SAST | Fast pattern-based scanner with extensive rule sets | [Docs](https://semgrep.dev/docs/) · [Community rules](https://semgrep.dev/explore) |
 | [**osv-scanner**](https://github.com/google/osv-scanner) | SCA | Lockfile-based vulnerability scanner backed by [OSV.dev](https://osv.dev/) | [Action](https://github.com/google/osv-scanner-action) · [Docs](https://google.github.io/osv-scanner/) |
-| [**OWASP Dependency Check**](https://github.com/dependency-check/DependencyCheck) | SCA | OWASP SCA tool for known vulnerabilities in dependencies | Requires `NVD_API_KEY` ([request one](https://nvd.nist.gov/developers/request-an-api-key)) — without it, the scan may return 0 findings |
+| [**OWASP Dependency Check**](https://github.com/dependency-check/DependencyCheck) | SCA | OWASP SCA tool for known vulnerabilities in dependencies | The workshop action uses bundled NVD data (`--noupdate`), so no API key is required to run the demo. For production you'd typically install dependency-check directly and pass `--nvdApiKey` to refresh the feed. |
 
 > **Note**: Different ecosystems have specialized SAST tools (e.g., ESLint with security plugins for JavaScript, Bandit for Python, Brakeman for Ruby on Rails) that can provide more targeted analysis alongside general-purpose scanners.
 

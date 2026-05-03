@@ -31,9 +31,7 @@ jobs:
           project: 'code'
           path: './code'
           format: 'ALL'
-          args: >
-            --failOnCVSS 7
-            --enableRetired
+          others: '--failOnCVSS=7'
 
       - name: Summarize findings
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''

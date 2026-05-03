@@ -115,3 +115,5 @@ By the end of this module, you will:
 > No bait specific to this module. The PR comment posted by the AI step *is* the output you're looking for — read it on your PR. Each finding includes its own location, evidence, and fix.
 >
 > Output is non-deterministic: wording, finding count, ordering and even reported line numbers vary between runs. Treat severities and locations as approximate.
+>
+> Severity legend: 🔴 Critical · 🟠 High · 🟡 Medium · 🔵 Low · ⚪ Info.

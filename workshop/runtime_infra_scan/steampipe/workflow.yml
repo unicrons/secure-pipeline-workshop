@@ -77,6 +77,16 @@ jobs:
           path: aws_compliance.benchmark.cis_v150.*.html
           retention-days: 3
 
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ "${{ steps.powerpipe.outcome }}" == "success" ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Powerpipe detected runtime infrastructure compliance issues."
+            echo "🔍 View findings: download the 'powerpipe-html-report' artifact from this run (Artifacts section at the top of the run page)."
+          fi
+
       - name: Set scan result
         id: scan-result
         if: always()

@@ -31,9 +31,27 @@ jobs:
           # Install TruffleHog
           curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
 
+          # Use --json so the next step can produce a uniform "Summarize findings"
+          # report (same shape as the other workshop modules).
           # Include `unverified` so detected-but-unverifiable secrets still fail the build
           # (the workshop's didactic AKIA is invalid and would otherwise be silently dropped).
-          trufflehog filesystem . --results=verified,unknown,unverified --fail
+          trufflehog filesystem . --results=verified,unknown,unverified --json > trufflehog.json
+
+          if [ -s trufflehog.json ]; then
+            exit 1
+          fi
+
+      - name: Summarize findings
+        if: always() && hashFiles('trufflehog.json') != ''
+        run: |
+          REPORT=trufflehog.json
+          if [ ! -s "$REPORT" ]; then
+            echo "✅ No security alerts"
+          else
+            COUNT=$(jq -s 'length' "$REPORT")
+            echo "❌ Found $COUNT TruffleHog finding(s):"
+            jq -r '"  - \(.DetectorName) | verified=\(.Verified)\n      \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line // 1)"' "$REPORT"
+          fi
 
       - name: Set scan result
         id: scan-result

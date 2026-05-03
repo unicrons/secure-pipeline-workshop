@@ -84,6 +84,16 @@ jobs:
           path: output/*.html
           retention-days: 1
 
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ "${{ steps.prowler.outcome }}" == "success" ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Prowler detected repository security issues."
+            echo "🔍 View findings: download the 'prowler-html-report' artifact from this run (Artifacts section at the top of the run page)."
+          fi
+
       - name: Set scan result
         id: scan-result
         if: always()

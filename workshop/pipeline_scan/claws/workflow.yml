@@ -75,6 +75,16 @@ jobs:
           # Execute the security analysis
           analyze -f stdout -c /tmp/claws-config.yml "${flags[@]}"
 
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Claws detected workflow security issues."
+            echo "🔍 View findings: see the 'Run Claws pipeline scanner' step output above (Claws prints findings to stdout)."
+          fi
+
       - name: Set scan result
         id: scan-result
         if: always()

@@ -110,17 +110,17 @@ By the end of this module, you will:
 <details>
 <summary><b>TruffleHog</b> — <code>Detector Type: AWS</code> at <code>code/src/simple-app.js:4</code></summary>
 
-**What TruffleHog flagged**: 1 unverified result on the `AKIA…` access-key literal. The job log prints a clean block:
+**What TruffleHog flagged**: 1 unverified result on the `AKIA…` access-key literal. Look in the **`Summarize findings`** step:
 
 ```
-Found unverified result 🐷🔑❓
-Detector Type: AWS
-Raw result: AKIA…
-File: code/src/simple-app.js
-Line: 4
+❌ Found 1 TruffleHog finding(s):
+  - AWS | verified=false
+      code/src/simple-app.js:4
 ```
 
 **Why the snippet uses `--results=verified,unknown,unverified`**: the workshop's AKIA is not a real AWS key, so TruffleHog can't validate it against AWS. Under the default `verified`-only filter the build would silently pass — the extra flags are what make the bait fire.
+
+**Why we run with `--json`**: the snippet pipes JSON output into a follow-up `Summarize findings` step (same shape as the other workshop modules). The default `verified=false` field tells you the secret matched a pattern but couldn't be validated against the live provider.
 
 **Fix** — move the hardcoded credentials to environment variables:
 

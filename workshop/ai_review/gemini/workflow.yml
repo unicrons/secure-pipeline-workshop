@@ -136,6 +136,22 @@ jobs:
 
           echo "✅ Gemini returned $(jq '.findings | length' findings.json) finding(s)"
 
+      - name: Summarize findings
+        if: always() && hashFiles('findings.json') != ''
+        run: |
+          REPORT=findings.json
+          COUNT=$(jq '.findings | length' "$REPORT")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT AI review finding(s):"
+            jq -r '.findings[] | "  - \(.id) | \(.severity) | \(.title)\n      \(.location)"' "$REPORT"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo ""
+              echo "🔍 Full report: see the '🤖 AI Security Review' comment on the PR conversation."
+            fi
+          fi
+
       - name: Post review comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0

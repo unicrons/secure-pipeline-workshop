@@ -7,6 +7,3 @@ on:
         description: "Pipeline scan result"
         value: ${{ jobs.pipeline-scan.outputs.result }}
 
-jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/pipeline_scan/{tool}/workflow.yml

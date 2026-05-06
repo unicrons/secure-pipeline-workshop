@@ -8,20 +8,39 @@ on:
         value: ${{ jobs.pipeline-scan.outputs.result }}
 
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/pipeline_scan/{tool}/workflow.yml
-
-  pipeline-scan:
-    name: "🚧 Pipeline Scan - Workshop Placeholder"
+  zizmor:
+    name: Run zizmor 🌈
     runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+    permissions:
+      security-events: write
+      contents: read # only needed for private repos
+      actions: read # only needed for private repos
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor 🌈
+        id: zizmor
+        uses: zizmorcore/zizmor-action@main
+        with:
+          min-severity: "high"
+          # Disable online audits — they hard-crash the run on any GitHub API HTTP error
+          # (see zizmor#1252 / #1874).
+          online-audits: "false"
+
+      - name: Summarize findings
+        if: always() && steps.zizmor.outputs.output-file != ''
         run: |
-          echo "🚧 Replace this job with content from workshop/pipeline_scan/{tool}/workflow.yml!"
-          echo "This will implement: Pipeline security analysis with your chosen tool"
-          {
-            echo "result=workshop-placeholder"
-          } >> "$GITHUB_OUTPUT"
+          SARIF="${{ steps.zizmor.outputs.output-file }}"
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT zizmor finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+            exit 1
+          fi

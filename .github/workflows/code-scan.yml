@@ -8,32 +8,69 @@ permissions:
   actions: read
 
 jobs:
-  # 🚧 REPLACE THE JOB SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/code_scan/sast/{tool}/workflow.yml 
-  sast-scan:
-    name: "🚧 SAST Scan - Placeholder"
+  semgrep-scan:
+    name: Semgrep Community Scan
     runs-on: ubuntu-latest
     outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
-        run: |
-          echo "🚧 Replace this job with content from workshop/code_scan/sast/{tool}/workflow.yml!"
-          echo "This will implement: SAST scan with your chosen tool"
-          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-  # 🚧 REPLACE THE JOB SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/code_scan/sca/{tool}/workflow.yml
-  sca-scan:
-    name: "🚧 SCA Scan - Placeholder"
-    runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.placeholder.outputs.result }}
-    steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Install Semgrep Community Edition
+        run: pip install semgrep
+
+      - name: Run Semgrep Security Scan
+        id: semgrep-tool
         run: |
-          echo "🚧 Replace this job with content from workshop/code_scan/sca/{tool}/workflow.yml!"
-          echo "This will implement: SCA scan with your chosen tool"
-          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"
+          semgrep \
+            --config=p/security-audit \
+            --config=p/javascript \
+            --config=p/owasp-top-ten \
+            --error \
+            --sarif \
+            --output=semgrep-results.sarif \
+            ./code/ || echo "SEMGREP_EXIT_CODE=$?" >> "$GITHUB_ENV"
+
+      - name: Summarize findings
+        if: always() && hashFiles('semgrep-results.sarif') != ''
+        run: |
+          COUNT=$(jq '[.runs[].results[]] | length' semgrep-results.sarif)
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Semgrep finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              semgrep-results.sarif
+          fi
+
+      - name: Upload Semgrep SARIF
+        uses: github/codeql-action/upload-sarif@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3.35.2
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep
+        if: always()
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          # Semgrep exit codes: 0=no findings, 1=findings found, 2+=error
+          if [ "${{ steps.semgrep-tool.outcome }}" == "success" ] && [ -z "$SEMGREP_EXIT_CODE" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Semgrep scan passed - no vulnerabilities found"
+          elif [ "$SEMGREP_EXIT_CODE" == "1" ] || [ "${{ steps.semgrep-tool.outcome }}" == "failure" ]; then
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Semgrep scan failed - vulnerabilities detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
+            exit 1
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Semgrep scan encountered an error"
+            exit 1
+          fi

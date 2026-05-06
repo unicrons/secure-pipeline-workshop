@@ -8,6 +8,7 @@ Welcome to the "Secure Pipeline" workshop! This hands-on workshop teaches you ho
 > **Platform-agnostic principles:** This workshop runs on GitHub Actions for hands-on convenience, but the **tools** (Semgrep, Trivy, Checkov, Prowler…) and **patterns** (shift-left, scan-then-gate, multi-layer pipeline) are universal. To run this on GitLab CI, Jenkins, CircleCI, etc., you'd translate the orchestration glue (workflow files, secrets, triggers) but keep everything else.
 
 
+
 ## 📁 Repository Structure
 
 ```

@@ -41,7 +41,7 @@ jobs:
 
       - name: Set Up Claws
         run: |
-          gem install claws-scan -v 0.7.5
+          gem install claws-scan -v 0.9.5
 
       - name: Run Claws pipeline scanner
         id: scan-tool

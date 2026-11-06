@@ -43,7 +43,7 @@ jobs:
           else
             echo "❌ Found $COUNT Dependency Check finding(s):"
             jq -r '.runs[].results[] |
-              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "  - \(.ruleId) | \(.message.text | split("\n")[0])\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
               "$SARIF"
           fi
 

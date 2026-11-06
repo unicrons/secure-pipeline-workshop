@@ -95,7 +95,6 @@ Before you start:
 
    | Module | What you need | Where to get it |
    |---|---|---|
-   | 2. Code Scan | `NVD_API_KEY` *(secret, optional but recommended for OWASP Dependency Check)* | [Request from NVD](https://nvd.nist.gov/developers/request-an-api-key) |
    | 6. Runtime Infra Scan | `AWS_IAM_ROLE_ARN` *(secret)*, `AWS_REGION` + `AWS_IAM_ROLE_SESSION_DURATION` *(vars)* | IAM role with `SecurityAudit` + `ViewOnlyAccess` and a GitHub OIDC trust policy |
    | 7. AI Security Review | `GEMINI_API_KEY` *(secret)* | [Google AI Studio → Create API key](https://aistudio.google.com/apikey) (free tier, no credit card) |
 

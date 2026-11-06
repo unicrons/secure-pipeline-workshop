@@ -143,7 +143,7 @@ if (filePath) {
 ```diff
    "dependencies": {
 -    "axios": "1.6.0"
-+    "axios": "1.15.2"
++    "axios": "1.21.0"
    }
 ```
 
@@ -157,6 +157,6 @@ cd ..
 git add code/package.json code/package-lock.json
 ```
 
-> Tip: `npm view axios versions` lists the available versions. At the time of writing `1.15.2` was clean; check the latest before committing.
+> Tip: `npm view axios versions` lists the available versions. At the time of writing `1.21.0` was clean; check the latest before committing.
 
 </details>

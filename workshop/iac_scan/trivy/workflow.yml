@@ -39,24 +39,32 @@ jobs:
           severity: 'CRITICAL,HIGH'
         continue-on-error: false
 
-      - name: Summarize findings
+      - name: Normalize SARIF paths to repo root
         if: always() && hashFiles('trivy-results.sarif') != ''
+        # Trivy emits paths relative to scan-ref; rewrite to repo-root so GHAS can map findings to the PR diff.
         run: |
-          COUNT=$(jq '[.runs[].results[]] | length' trivy-results.sarif)
+          jq '(.runs[].results[].locations[].physicalLocation.artifactLocation.uri) |= "infra/" + .' \
+            trivy-results.sarif > trivy-iac.sarif
+
+      - name: Summarize findings
+        if: always() && hashFiles('trivy-iac.sarif') != ''
+        run: |
+          COUNT=$(jq '[.runs[].results[]] | length' trivy-iac.sarif)
           if [ "${COUNT:-0}" -eq 0 ]; then
             echo "✅ No security alerts"
           else
             echo "❌ Found $COUNT Trivy IaC finding(s):"
             jq -r '.runs[].results[] |
               "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
-              trivy-results.sarif
+              trivy-iac.sarif
           fi
 
       - name: Upload Trivy scan results to GitHub Security tab
-        if: always()
+        if: always() && hashFiles('trivy-iac.sarif') != ''
         uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-iac.sarif
+          category: trivy-iac
 
       - name: Set scan result
         id: scan-result

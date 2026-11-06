@@ -27,12 +27,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Initialize CodeQL toolchain
+        id: init
         uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           languages: javascript
 
       - name: Add codeql to PATH
-        run: find "$RUNNER_TOOL_CACHE/CodeQL" -name codeql -type f -printf '%h\n' -quit >> "$GITHUB_PATH"
+        env:
+          CODEQL_PATH: ${{ steps.init.outputs.codeql-path }}
+        run: dirname "$CODEQL_PATH" >> "$GITHUB_PATH"
 
       - name: Build CodeQL database
         run: |

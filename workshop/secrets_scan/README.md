@@ -136,7 +136,7 @@ By the end of this module, you will:
 <details>
 <summary><b>Gitleaks</b> — <code>aws-access-token</code> + <code>generic-api-key</code> at <code>code/src/simple-app.js:4-5</code></summary>
 
-**What Gitleaks flagged**: 2 leaks — the access-key (rule `aws-access-token`) and the secret-key (rule `generic-api-key`, high-entropy match). The output has rich detail (Finding / Secret / RuleID / Entropy / File / Line / Fingerprint), but the `wget`-based install pollutes the log with a progress bar — scroll past it to find `Finding:`.
+**What Gitleaks flagged**: 2 leaks — the access-key (rule `aws-access-token`) and the secret-key (rule `generic-api-key`, high-entropy match). The output has rich detail (Finding / Secret / RuleID / Entropy / File / Line / Fingerprint); search the log for `Finding:`, or read the `Summarize findings` step for the one-line-per-leak view.
 
 **Snippet note**: the snippet uses `--no-git` so only the current filesystem is scanned, not git history. Once your latest commit is clean, Gitleaks goes green even if older commits on the branch still contain the literals.
 

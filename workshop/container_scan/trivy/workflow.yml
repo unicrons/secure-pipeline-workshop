@@ -63,6 +63,8 @@ jobs:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: "sarif"
           output: "trivy-image.sarif"
+          limit-severities-for-sarif: true
+          hide-progress: true
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: "os,library"

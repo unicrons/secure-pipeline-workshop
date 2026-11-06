@@ -78,12 +78,12 @@ By the end of this module, you will:
 
 ```yaml
 - name: Set Up Ruby
-  uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
+  uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
   with:
     ruby-version: '3.3'
 ```
 
-Use any current SHA from a tagged release of [`ruby/setup-ruby`](https://github.com/ruby/setup-ruby/tags) — the one above is `v1.329.0` at the time of writing.
+Use any current SHA from a tagged release of [`ruby/setup-ruby`](https://github.com/ruby/setup-ruby/tags) — the one above is `v1.336.0` at the time of writing.
 
 </details>
 
@@ -99,7 +99,7 @@ Use any current SHA from a tagged release of [`ruby/setup-ruby`](https://github.
 ```yaml
 - name: Run zizmor 🌈
   id: zizmor
-  uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+  uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
   with:
     min-severity: "high"
     online-audits: "false"

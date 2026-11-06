@@ -123,7 +123,7 @@ if (filePath) {
 </details>
 
 <details>
-<summary><b>Semgrep (SAST)</b> — <code>javascript.lang.security.audit.detect-child-process</code> at <code>code/src/simple-app.js:42</code></summary>
+<summary><b>Semgrep (SAST)</b> — <code>javascript.lang.security.detect-child-process.detect-child-process</code> at <code>code/src/simple-app.js:42</code></summary>
 
 **Reading the output**: the snippet's `Summarize findings` step parses the SARIF and prints `ruleId | message | path:line` directly to the job log — no GHAS required. If your fork has GHAS enabled, the SARIF is also uploaded to the *Code Scanning* tab for a richer UI.
 
@@ -143,7 +143,7 @@ if (filePath) {
 ```diff
    "dependencies": {
 -    "axios": "1.6.0"
-+    "axios": "1.15.2"
++    "axios": "1.21.0"
    }
 ```
 
@@ -157,6 +157,17 @@ cd ..
 git add code/package.json code/package-lock.json
 ```
 
-> Tip: `npm view axios versions` lists the available versions. At the time of writing `1.15.2` was clean; check the latest before committing.
+> Tip: `npm view axios versions` lists the available versions. At the time of writing `1.21.0` was clean; check the latest before committing.
+
+</details>
+
+<details>
+<summary><b>OWASP Dependency Check (SCA)</b> — GHSA advisories on <code>axios@1.6.0</code>, <code>follow-redirects</code> and <code>form-data</code> at CVSS ≥ 7</summary>
+
+**What Dependency Check flagged**: the same vulnerable dependency tree, reported per advisory (`GHSA-…`) instead of per CVE. The job fails because of `--failOnCVSS=7`; the full HTML report is attached to the run as the *Dependency Check Report* artifact (*Summary* tab of the run → *Artifacts*).
+
+**Reading the output**: the `Summarize findings` step prints one line per advisory (`GHSA-… | <title>`). Advisory descriptions are long markdown, so open the HTML report for details.
+
+**Fix** — identical to the osv-scanner fix above: bump `axios` and regenerate the lockfile. One edit clears both tools.
 
 </details>

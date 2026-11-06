@@ -13,7 +13,7 @@
 # =============================================================================
 
 jobs:
-  container-scan:
+  build-and-container-scan:
     name: Container Scan with Grype
     runs-on: ubuntu-latest
     permissions:
@@ -23,7 +23,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.imageid }}
       tag: ${{ steps.meta.outputs.tags }}
-      result: ${{ steps.scan-result.outputs.result }}
+      scan-result: ${{ steps.scan-result.outputs.result }}
     
     steps:
       - name: Checkout code

@@ -78,18 +78,33 @@ By the end of this module, you will:
 
 **What Trivy flagged**: an `alpine 3.19.4` base ships `musl` / `musl-utils` HIGHs (e.g. `CVE-2025-26519`, `CVE-2026-40200`) and EOL warnings.
 
-**Reading the output**: Trivy prints a clean table (Library / Vulnerability / Severity / Status / Installed Version / Fixed Version / Title). This is the gold-standard output across the workshop.
+**Reading the output**: Trivy prints a clean table (Library / Vulnerability / Severity / Status / Installed Version / Fixed Version / Title), grouped by **target**. Each target is a different layer of the image, and each layer needs its own fix:
+
+| Target in the output | What it is | Fix |
+|---|---|---|
+| `<image> (alpine 3.19.4)` | OS packages of the base image | Bump `FROM` to a current LTS tag |
+| `Node.js` — `brace-expansion`, `undici`, `tar`, `pacote`… | The global `npm` bundled in the image | Bump the `npm@…` pin in the Dockerfile |
+| `Node.js` — `axios`, `follow-redirects`, `form-data` | The app's own dependencies | That's module 2's bait — if you fixed it there, this layer is already gone |
 
 > ⚠️ **Don't just bump alpine minor**: `node:20-alpine3.19` → `node:20-alpine3.21` actually *increases* the finding count (alpine 3.21 still ships an unpatched openssl). Jump to a current node-major instead.
 
+> ⚠️ **Odd Node majors are not LTS**: `node:25-alpine` sits on a newer alpine, but at the time of writing it scans *worse* than the bait (openssl, zlib and musl HIGHs). Pick an even, LTS major.
+
 > ⚠️ **"Fixed Version" is per-CVE, not per-package**: bumping to the version Trivy lists in that column only closes the CVE you happened to look at. Pick the latest stable image tag.
 
-**Fix** — bump the base image:
+**Fix** — bump the base image *and* the npm pin:
 
 ```diff
 -FROM node:20-alpine3.19
-+FROM node:25-alpine
++FROM node:26-alpine
+
+-RUN npm install -g npm@11.13.0 && npm cache clean --force
++RUN npm install -g npm@12.2.2 && npm cache clean --force
 ```
+
+If you haven't done module 2 yet, also bump `axios` and regenerate the lockfile as described in its [Solutions](../code_scan/README.md#solutions-spoilers--open-only-when-stuck) — otherwise the `axios` layer keeps the job red.
+
+> Tip: scan locally before pushing: `docker build -t app code && trivy image --severity HIGH,CRITICAL --ignore-unfixed app`. At the time of writing `node:26-alpine` + `npm@12.2.2` + `axios@1.21.0` scanned clean on both Trivy and Grype; check the latest tags before committing.
 
 </details>
 

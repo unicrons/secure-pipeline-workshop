@@ -14,13 +14,15 @@
 # =============================================================================
 
 jobs:
-  zizmor:
+  pipeline-scan:
     name: Run zizmor 🌈
     runs-on: ubuntu-latest
     permissions:
       security-events: write
       contents: read # only needed for private repos
       actions: read # only needed for private repos
+    outputs:
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,6 +39,7 @@ jobs:
           online-audits: "false"
 
       - name: Summarize findings
+        id: summarize
         if: always() && steps.zizmor.outputs.output-file != ''
         run: |
           SARIF="${{ steps.zizmor.outputs.output-file }}"
@@ -48,5 +51,18 @@ jobs:
             jq -r '.runs[].results[] |
               "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
               "$SARIF"
+            exit 1
+          fi
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.zizmor.outcome }}" == "success" ] && [ "${{ steps.summarize.outcome }}" != "failure" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Pipeline scan passed - no security issues detected"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Pipeline scan failed - security issues detected in workflows"
             exit 1
           fi

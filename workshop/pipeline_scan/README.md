@@ -88,7 +88,7 @@ Use any current SHA from a tagged release of [`ruby/setup-ruby`](https://github.
 </details>
 
 <details>
-<summary><b>zizmor</b> — <code>zizmor/unpinned-uses</code> on <code>.github/workflows/pipeline-scan.yml:26</code></summary>
+<summary><b>zizmor</b> — <code>zizmor/unpinned-uses</code> on <code>.github/workflows/pipeline-scan.yml:28</code></summary>
 
 **What zizmor flagged**: the snippet's `Run zizmor 🌈` step uses `zizmorcore/zizmor-action@main` — same antipattern as the Claws example, just on zizmor's own action.
 

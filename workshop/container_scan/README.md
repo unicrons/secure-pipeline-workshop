@@ -104,6 +104,8 @@ By the end of this module, you will:
 
 If you haven't done module 2 yet, also bump `axios` and regenerate the lockfile as described in its [Solutions](../code_scan/README.md#solutions-spoilers--open-only-when-stuck) — otherwise the `axios` layer keeps the job red.
 
+Same for module 3: Trivy also runs its secret scanner on the image, so the hardcoded AWS keys in `src/simple-app.js` show up as `aws-access-key-id` / `aws-secret-access-key` findings until you move them to `process.env.*`.
+
 > Tip: scan locally before pushing: `docker build -t app code && trivy image --severity HIGH,CRITICAL --ignore-unfixed app`. At the time of writing `node:26-alpine` + `npm@12.2.2` + `axios@1.21.0` scanned clean on both Trivy and Grype; check the latest tags before committing.
 
 </details>

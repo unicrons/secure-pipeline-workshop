@@ -81,7 +81,7 @@ By the end of this module, you will:
 > The bait is a single misconfigured ingress rule in `infra/main.tf`. Both scanners (Checkov and Trivy IaC) flag the same line range. One fix clears both.
 
 <details>
-<summary><b>Checkov</b> — <code>CKV_AWS_24</code> at <code>infra/main.tf:120-126</code></summary>
+<summary><b>Checkov</b> — <code>CKV_AWS_24</code> at <code>infra/main.tf:115-149</code></summary>
 
 **What Checkov flagged**: `aws_security_group.ecs_tasks` has an ingress rule with `description = "HTTP from ALB"` but `from_port = 22 / to_port = 22` and `cidr_blocks = ["0.0.0.0/0"]` — i.e. SSH open to the whole internet. Classic copy-paste/typo bait.
 
@@ -106,9 +106,9 @@ By the end of this module, you will:
 </details>
 
 <details>
-<summary><b>Trivy IaC</b> — <code>AVD-AWS-0107</code> on the same block</summary>
+<summary><b>Trivy IaC</b> — <code>AWS-0107</code> on the same block</summary>
 
-**What Trivy IaC flagged**: same ingress rule (port 22 from `0.0.0.0/0`). Trivy's rule ID is `AVD-AWS-0107`.
+**What Trivy IaC flagged**: same ingress rule (port 22 from `0.0.0.0/0`). Trivy's rule ID is `AWS-0107` (older Trivy releases print it as `AVD-AWS-0107`), reported at `infra/main.tf:125`.
 
 **Reading the output**: the snippet's `Summarize findings` step parses the SARIF and prints `ruleId | message | path:line` directly to the job log — no GHAS required. The SARIF is also uploaded to the GitHub *Code Scanning* tab if your fork has GHAS enabled.
 

@@ -33,25 +33,34 @@ jobs:
           format: 'ALL'
           others: '--failOnCVSS=7'
 
-      - name: Summarize findings
+      - name: Normalize SARIF paths to repo root
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        # Dependency Check emits container paths like file:///github/workspace/code/package-lock.json?axios;
+        # rewrite to repo-relative paths so GHAS can map findings to the PR diff.
         run: |
-          SARIF=reports/dependency-check-report.sarif
+          jq '(.runs[].results[].locations[].physicalLocation.artifactLocation.uri) |= (sub("^file:///github/workspace/"; "") | sub("\\?.*$"; ""))' \
+            reports/dependency-check-report.sarif > dependency-check.sarif
+
+      - name: Summarize findings
+        if: always() && hashFiles('dependency-check.sarif') != ''
+        run: |
+          SARIF=dependency-check.sarif
           COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
           if [ "${COUNT:-0}" -eq 0 ]; then
             echo "✅ No vulnerabilities found"
           else
             echo "❌ Found $COUNT Dependency Check finding(s):"
-            jq -r '.runs[].results[] |
-              "  - \(.ruleId) | \(.message.text | split("\n")[0])\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+            # message.text holds the full advisory markdown; print the rule's one-line description instead.
+            jq -r '.runs[] | ((.tool.driver.rules // []) | map({(.id): .shortDescription.text}) | add // {}) as $rules | .results[] |
+              "  - \(.ruleId) | \($rules[.ruleId] // (.message.text | split("\n")[0]))\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
               "$SARIF"
           fi
 
       - name: Upload SARIF to GitHub Code Scanning
-        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        if: always() && hashFiles('dependency-check.sarif') != ''
         uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
-          sarif_file: reports/dependency-check-report.sarif
+          sarif_file: dependency-check.sarif
           category: dependency-check-sca
 
       - name: Set scan result

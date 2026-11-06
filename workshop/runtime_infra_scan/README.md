@@ -8,6 +8,10 @@
 > This module needs **a live AWS account** (IAM role + GitHub OIDC trust). Without it,
 > leave the placeholder as-is — the rest of the workshop works fine. To enable it,
 > see [Running this module](#running-this-module) below.
+>
+> The workshop role trusts forks by repo name, so keep your fork named `secure-pipeline-workshop`.
+> If `Configure AWS credentials` fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity`,
+> your fork's OIDC subject isn't covered by the role's trust policy — ping the instructors.
 
 This workshop module focuses on scanning the deployed (runtime) infrastructure for vulnerabilities and misconfigurations that may not be detectable through static analysis of code or configuration files.
 
@@ -76,7 +80,16 @@ By the end of this module, you will:
 
 When you adopt this job in a real repo, the workflow itself doesn't need to change — only the AWS side and how you treat findings:
 
-1. **Provision an IAM role** in your account with `SecurityAudit` + `ViewOnlyAccess`, plus a trust policy that lets GitHub Actions OIDC (`token.actions.githubusercontent.com`) assume it from your repo.
+1. **Provision an IAM role** in your account with `SecurityAudit` + `ViewOnlyAccess`, plus a trust policy that lets GitHub Actions OIDC (`token.actions.githubusercontent.com`) assume it from your repo. Check which `sub` format your repo emits with `gh api repos/<owner>/<repo>/actions/oidc/customization/sub`: repos created recently use GitHub's immutable subject (`repo:<owner>@<owner-id>/<repo>@<repo-id>:…`), older ones the legacy `repo:<owner>/<repo>:…`. Match the one you get, e.g.:
+
+   ```json
+   "StringLike": {
+     "token.actions.githubusercontent.com:sub": [
+       "repo:<owner>/<repo>:*",
+       "repo:<owner>@<owner-id>/<repo>@<repo-id>:*"
+     ]
+   }
+   ```
 2. **Set the secrets/vars** in GitHub: `AWS_IAM_ROLE_ARN` (secret), `AWS_REGION` and `AWS_IAM_ROLE_SESSION_DURATION` (variables).
 3. **Decide your failure policy**: drop `-z` from the `prowler` command if you want the pipeline to fail on findings, or keep it and gate on severity (e.g. `--severity critical high`) so only the worst issues block merges.
 4. **Scope the scan**: `--service iam s3` is fine for a demo, but for real use widen it (`ec2`, `rds`, `kms`, `cloudtrail`, …) or run a full `prowler aws` on a schedule and a narrower scan per PR.

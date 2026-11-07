@@ -9,7 +9,10 @@
 # - An AWS IAM role with the following policies:
 #   - `arn:aws:iam::aws:policy/SecurityAudit`
 #   - `arn:aws:iam::aws:policy/job-function/ViewOnlyAccess`
-#     - More info about it in https://docs.prowler.com/projects/prowler-open-source/en/latest/tutorials/aws/authentication/
+#     - More info about it in https://docs.prowler.com/user-guide/providers/aws/authentication
+# - A trust policy on that role for GitHub Actions OIDC (`token.actions.githubusercontent.com`)
+#   that matches your repo's subject. New repos and forks emit the immutable format
+#   `repo:<owner>@<id>/<repo>@<id>:*`; see the module README for both formats.
 # - Configure role arn as Repository Secret, called `AWS_IAM_ROLE_ARN`
 # - Configure AWS Region as Repository Variable, called `AWS_REGION`
 # - Configure AWS IAM Role Session Duration as Repository Variable (default: 3600 seconds), called `AWS_IAM_ROLE_SESSION_DURATION`
@@ -17,8 +20,13 @@
 # TO USE THIS JOB:
 # 1. Copy this entire job definition into .github/workflows/runtime-infra-scan.yml
 # 2. Replace the current jobs: definition with this one
-# 3. The job will automatically scan all terraform files in infra/
-# 4. The scan will fail if any security issues are found in the infrastructure
+# 3. The job assumes the role via OIDC and runs `prowler aws` against the live account
+#    (services `iam` and `s3`; widen `--service` for a broader scan)
+# 4. The job does NOT fail on findings: `-z` returns exit code 0 and the step has
+#    `continue-on-error`. Read the results in the `prowler-html-report` artifact.
+#    Drop `-z` (and `continue-on-error`) if you want findings to block the pipeline.
+# 5. Prowler needs Python >=3.10,<3.14, so the job pins the interpreter with setup-python
+#    instead of relying on the runner's default Python.
 # =============================================================================
 
 jobs:

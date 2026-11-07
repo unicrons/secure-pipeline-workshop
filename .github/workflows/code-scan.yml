@@ -149,23 +149,17 @@ jobs:
       - name: Set scan result
         id: scan-result
         if: always()
-        env:
-          CODEQL_OUTCOME: ${{ steps.codeql-tool.outcome }}
-          EVENT_NAME: ${{ github.event_name }}
-          REPOSITORY: ${{ github.repository }}
-          EVENT_NUMBER: ${{ github.event.number }}
-
         run: |
-          if [ "$CODEQL_OUTCOME" == "success" ]; then
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
             echo "result=success" >> "$GITHUB_OUTPUT"
             echo "✅ Code scan passed — no critical vulnerabilities found"
           else
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ Code scan failed — vulnerabilities detected"
-            if [ "$EVENT_NAME" == "pull_request" ]; then
-              echo "🔍 View findings: https://github.com/$REPOSITORY/security/code-scanning?query=pr%3A$EVENT_NUMBER+is%3Aopen"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
             else
-              echo "🔍 View findings: https://github.com/$REPOSITORY/security/code-scanning"
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
             fi
             exit 1
           fi

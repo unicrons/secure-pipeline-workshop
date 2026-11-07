@@ -4,7 +4,7 @@ on:
   workflow_call:
     outputs:
       scan-result:
-        description: "Pipeline scan result1"
+        description: "Pipeline scan result1-new branch"
         value: ${{ jobs.pipeline-scan.outputs.result }}
 
 jobs:

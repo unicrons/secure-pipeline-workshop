@@ -59,3 +59,7 @@ This workshop is provided under the MIT License for educational purposes.
 ---
 
 **Ready to build the perfect secure pipeline? Start [here](workshop/)! 🚀**
+
+## My Workshop Notes
+
+Preparing for BSides Munich DevSecOps workshop.

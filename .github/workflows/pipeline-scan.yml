@@ -8,20 +8,87 @@ on:
         value: ${{ jobs.pipeline-scan.outputs.result }}
 
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/pipeline_scan/{tool}/workflow.yml
-
   pipeline-scan:
-    name: "🚧 Pipeline Scan - Workshop Placeholder"
+    name: Pipeline Scan with Claws
     runs-on: ubuntu-latest
     outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set Up Ruby
+        uses: ruby/setup-ruby@master
+        with:
+          ruby-version: '3.3'
+
+      - name: Set Up Claws Config
         run: |
-          echo "🚧 Replace this job with content from workshop/pipeline_scan/{tool}/workflow.yml!"
-          echo "This will implement: Pipeline security analysis with your chosen tool"
-          {
-            echo "result=workshop-placeholder"
-          } >> "$GITHUB_OUTPUT"
+          cp workshop/pipeline_scan/claws/claws-config.yml /tmp/claws-config.yml
+
+      - name: Set Up Shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Set Up Claws
+        run: |
+          gem install claws-scan -v 0.9.5
+
+      - name: Run Claws pipeline scanner
+        id: scan-tool
+        run: |
+          #!/bin/bash
+
+          echo "🔍 Starting workflow security analysis..."
+
+          # Find all workflow files in .github/workflows directory
+          workflow_files=$(find .github/workflows -type f)
+
+          # Check if any workflow files exist
+          if [[ -z "$workflow_files" ]]; then
+            echo "⚠️  No workflow files found in .github/workflows"
+            echo "   Make sure your workflows are in the correct directory"
+            exit 0
+          fi
+
+          # Prepare command flags for each workflow file
+          flags=()
+          echo "📁 Found workflow files:"
+
+          while IFS= read -r file; do
+            echo "   - $file"
+            flags+=("-t" "$file")
+          done <<< "$workflow_files"
+
+          echo ""
+          echo "🚀 Running Claws security analysis..."
+
+          # Execute the security analysis
+          analyze -f stdout -c /tmp/claws-config.yml "${flags[@]}"
+
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Claws detected workflow security issues."
+            echo "🔍 View findings: see the 'Run Claws pipeline scanner' step output above (Claws prints findings to stdout)."
+          fi
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Pipeline scan passed - no security issues detected"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Pipeline scan failed - security issues detected in workflows"
+            exit 1
+          fi

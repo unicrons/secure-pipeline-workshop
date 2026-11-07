@@ -16,7 +16,7 @@ jobs:
     permissions:
       security-events: write
       contents: read # only needed for private repos
-      actions: read # only needed for private repos
+      actions: read # only needed for private repos.
     outputs:
       result: ${{ steps.scan-result.outputs.result }}
     steps:

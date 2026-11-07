@@ -8,18 +8,74 @@ on:
         value: ${{ jobs.iac-scan.outputs.result }}
 
 jobs:
-  # 🚧 REPLACE THIS ENTIRE 'jobs:' SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/iac_scan/{tool}/workflow.yml
-
   iac-scan:
-    name: "🚧 IAC Scan - Workshop Placeholder"
+    name: IAC Scan with Trivy
     runs-on: ubuntu-latest
     outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Trivy vulnerability scanner
+        id: scan-tool
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: 'config'
+          scan-ref: infra/
+          hide-progress: true
+          format: 'sarif'
+          limit-severities-for-sarif: true
+          output: 'trivy-results.sarif'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: false
+
+      - name: Normalize SARIF paths to repo root
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        # Trivy emits paths relative to scan-ref; rewrite to repo-root so GHAS can map findings to the PR diff.
         run: |
-          echo "🚧 Replace this job with content from workshop/iac_scan/{tool}/workflow.yml!"
-          echo "This will implement: Infrastructure security scan with your chosen tool"
-          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"
+          jq '(.runs[].results[].locations[].physicalLocation.artifactLocation.uri) |= "infra/" + .' \
+            trivy-results.sarif > trivy-iac.sarif
+
+      - name: Summarize findings
+        if: always() && hashFiles('trivy-iac.sarif') != ''
+        run: |
+          COUNT=$(jq '[.runs[].results[]] | length' trivy-iac.sarif)
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT Trivy IaC finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              trivy-iac.sarif
+          fi
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: always() && hashFiles('trivy-iac.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: trivy-iac.sarif
+          category: trivy-iac
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ IAC scan passed - no security issues found"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ IAC scan failed - security issues detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
+            exit 1
+          fi
+

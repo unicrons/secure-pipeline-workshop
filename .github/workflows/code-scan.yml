@@ -101,17 +101,77 @@ jobs:
             echo "✅ CodeQL scan completed - no security alerts"
           fi
 
-  # 🚧 REPLACE THE JOB SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/code_scan/sca/{tool}/workflow.yml
-  sca-scan:
-    name: "🚧 SCA Scan - Placeholder"
+  code-scan:
+    name: Code Scan with Dependency Check
     runs-on: ubuntu-latest
     outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run Dependency Check scanner
+        id: scan-tool
+        uses: dependency-check/Dependency-Check_Action@75ba02d6183445fe0761d26e836bde58b1560600 # 1.1.0
+        with:
+          project: 'code'
+          path: './code'
+          format: 'ALL'
+          others: '--failOnCVSS=7'
+
+      - name: Normalize SARIF paths to repo root
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        # Dependency Check emits container paths like file:///github/workspace/code/package-lock.json?axios;
+        # rewrite to repo-relative paths so GHAS can map findings to the PR diff.
         run: |
-          echo "🚧 Replace this job with content from workshop/code_scan/sca/{tool}/workflow.yml!"
-          echo "This will implement: SCA scan with your chosen tool"
-          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"
+          jq '(.runs[].results[].locations[].physicalLocation.artifactLocation.uri) |= (sub("^file:///github/workspace/"; "") | sub("\\?.*$"; ""))' \
+            reports/dependency-check-report.sarif > dependency-check.sarif
+
+      - name: Summarize findings
+        if: always() && hashFiles('dependency-check.sarif') != ''
+        run: |
+          SARIF=dependency-check.sarif
+          COUNT=$(jq '[.runs[].results[]] | length' "$SARIF")
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No vulnerabilities found"
+          else
+            echo "❌ Found $COUNT Dependency Check finding(s):"
+            # message.text holds the full advisory markdown; print the rule's one-line description instead.
+            jq -r '.runs[] | ((.tool.driver.rules // []) | map({(.id): .shortDescription.text}) | add // {}) as $rules | .results[] |
+              "  - \(.ruleId) | \($rules[.ruleId] // (.message.text | split("\n")[0]))\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              "$SARIF"
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('dependency-check.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: dependency-check.sarif
+          category: dependency-check-sca
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.scan-tool.outcome }}" == "success" ]; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Code scan passed — no critical vulnerabilities found"
+          else
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ Code scan failed — vulnerabilities detected"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
+            exit 1
+          fi
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+            name: Dependency Check Report
+            path: ${{github.workspace}}/reports

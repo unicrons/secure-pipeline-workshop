@@ -13,6 +13,15 @@
 # 5. Configure min-severity level as needed (low, medium, high, unknown)
 # =============================================================================
 
+name: Pipeline Security Scan
+on:
+  workflow_call:
+    outputs:
+      scan-result:
+        description: "Pipeline scan result"
+        value: ${{ jobs.pipeline-scan.outputs.result }}
+
+
 jobs:
   pipeline-scan:
     name: Run zizmor 🌈

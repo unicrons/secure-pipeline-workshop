@@ -8,20 +8,93 @@ permissions:
   actions: read
 
 jobs:
-  # 🚧 REPLACE THE JOB SECTION WITH WORKSHOP CONTENT! 🚧
-  # Copy from: workshop/code_scan/sast/{tool}/workflow.yml 
-  sast-scan:
-    name: "🚧 SAST Scan - Placeholder"
+  codeql-scan:
+    name: CodeQL SAST Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     outputs:
-      result: ${{ steps.placeholder.outputs.result }}
+      result: ${{ steps.scan-result.outputs.result }}
     steps:
-      - name: Workshop Placeholder
-        id: placeholder
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Initialize CodeQL toolchain
+        id: init
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: javascript
+
+      - name: Add codeql to PATH
+        env:
+          CODEQL_PATH: ${{ steps.init.outputs.codeql-path }}
+        run: dirname "$CODEQL_PATH" >> "$GITHUB_PATH"
+
+      - name: Build CodeQL database
         run: |
-          echo "🚧 Replace this job with content from workshop/code_scan/sast/{tool}/workflow.yml!"
-          echo "This will implement: SAST scan with your chosen tool"
-          echo "result=workshop-placeholder" >> "$GITHUB_OUTPUT"
+          codeql database create codeql-db \
+            --language=javascript \
+            --source-root=.
+
+      - name: Run CodeQL analysis
+        id: codeql-tool
+        run: |
+          mkdir -p codeql-results
+          codeql database analyze codeql-db \
+            --format=sarif-latest \
+            --output=codeql-results/javascript.sarif \
+            codeql/javascript-queries:codeql-suites/javascript-security-extended.qls
+
+      - name: Summarize findings
+        if: always() && hashFiles('codeql-results/*.sarif') != ''
+        run: |
+          COUNT=$(jq '[.runs[].results[]] | length' codeql-results/*.sarif | awk '{s+=$1} END {print s}')
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "✅ No security alerts"
+          else
+            echo "❌ Found $COUNT CodeQL finding(s):"
+            jq -r '.runs[].results[] |
+              "  - \(.ruleId) | \(.message.text)\n      \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine // 1)"' \
+              codeql-results/*.sarif
+          fi
+
+      - name: Upload SARIF to GitHub Advanced Security
+        if: always() && hashFiles('codeql-results/*.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: codeql-results
+          category: codeql
+
+      - name: Set scan result
+        id: scan-result
+        if: always()
+        run: |
+          if [ "${{ steps.codeql-tool.outcome }}" != "success" ]; then
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ CodeQL scan encountered an error"
+            exit 1
+          fi
+          if ! ls codeql-results/*.sarif >/dev/null 2>&1; then
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ CodeQL scan completed - no SARIF produced (no findings)"
+            exit 0
+          fi
+          COUNT=$(jq '[.runs[].results[]] | length' codeql-results/*.sarif | awk '{s+=$1} END {print s}')
+          if [ "${COUNT:-0}" -gt 0 ]; then
+            echo "result=failure" >> "$GITHUB_OUTPUT"
+            echo "❌ CodeQL found $COUNT security alert(s)"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            else
+              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+            fi
+            exit 1
+          else
+            echo "result=success" >> "$GITHUB_OUTPUT"
+            echo "✅ CodeQL scan completed - no security alerts"
+          fi
 
   # 🚧 REPLACE THE JOB SECTION WITH WORKSHOP CONTENT! 🚧
   # Copy from: workshop/code_scan/sca/{tool}/workflow.yml

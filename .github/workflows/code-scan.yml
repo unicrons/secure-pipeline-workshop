@@ -70,8 +70,13 @@ jobs:
       - name: Set scan result
         id: scan-result
         if: always()
+        env:
+          CODEQL_OUTCOME: ${{ steps.codeql-tool.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPOSITORY: ${{ github.repository }}
+          EVENT_NUMBER: ${{ github.event.number }}
         run: |
-          if [ "${{ steps.codeql-tool.outcome }}" != "success" ]; then
+          if [ "$CODEQL_OUTCOME" != "success" ]; then
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ CodeQL scan encountered an error"
             exit 1
@@ -85,10 +90,10 @@ jobs:
           if [ "${COUNT:-0}" -gt 0 ]; then
             echo "result=failure" >> "$GITHUB_OUTPUT"
             echo "❌ CodeQL found $COUNT security alert(s)"
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning?query=pr%3A${{ github.event.number }}+is%3Aopen"
+            if [ "$EVENT_NAME" == "pull_request" ]; then
+              echo "🔍 View findings: https://github.com/$REPOSITORY/security/code-scanning?query=pr%3A$EVENT_NUMBER+is%3Aopen"
             else
-              echo "🔍 View findings: https://github.com/${{ github.repository }}/security/code-scanning"
+              echo "🔍 View findings: https://github.com/$REPOSITORY/security/code-scanning"
             fi
             exit 1
           else

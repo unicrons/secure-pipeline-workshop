@@ -25,7 +25,7 @@ jobs:
 
       - name: Run zizmor 🌈
         id: zizmor
-        uses: zizmorcore/zizmor-action@v1
+        uses: zizmorcore/zizmor-action@7c059886783a4aba4a1d18e00d92f3e25e7fbe88
         with:
           min-severity: "high"
           # Disable online audits — they hard-crash the run on any GitHub API HTTP error

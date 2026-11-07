@@ -74,5 +74,3 @@ jobs:
             echo "❌ Semgrep scan encountered an error"
             exit 1
           fi
-
-

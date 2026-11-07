@@ -59,3 +59,5 @@ This workshop is provided under the MIT License for educational purposes.
 ---
 
 **Ready to build the perfect secure pipeline? Start [here](workshop/)! 🚀**
+
+> Updated: 2026-11-07 09:37

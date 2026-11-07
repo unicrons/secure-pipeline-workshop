@@ -7,6 +7,12 @@ on:
 permissions:
   contents: read
 
+# A new push supersedes the run still in progress for the same PR: cancel it, so stale
+# results (and SARIF uploads) can't land after the newer run's.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pipeline-scan:
     uses: ./.github/workflows/pipeline-scan.yml

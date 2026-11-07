@@ -84,6 +84,8 @@ Before you start:
 
    > Fork rather than copy, and keep the repo name `secure-pipeline-workshop` (module 6's AWS trust policy matches on it). If you push a copy into a new repo instead, GitHub push protection rejects the push because of the intentionally fake AWS keys in `code/src/simple-app.js` history; use the "allow secret" links it prints to proceed.
 
+   > **Enable Actions on your fork before opening your PR.** GitHub disables workflows on new forks: open your fork's **Actions** tab and click **I understand my workflows, go ahead and enable them**. Until you do, your PR gets no checks at all. If you already opened the PR, enabling Actions doesn't start it; push a new commit to trigger the orchestrator.
+
 2. **Set up your working branch.**
    On any page of **your fork**, press `.` (or change `github.com` → `github.dev` in the URL) to open a full VS Code editor in the browser. Use the branch picker (bottom-left) → create `workshop` off `main`. You're ready to edit YAMLs, commit and push from the Source Control panel. Keep `main` clean so you can compare your changes against the upstream and reset easily if something goes sideways.
 
@@ -113,7 +115,7 @@ For each module:
 5. **Read the failure**: each module ships with a planted **bait** (a misconfiguration or vulnerable line) the scanner is meant to catch. The job log points at the file and line. If you get stuck, the module's `Solutions` section is the safety net.
 6. **Fix the bait** and push again until the job goes green ✅. *(Optional: try a second tool in the same module — it usually flags the same bait.)*
 
-> ℹ️ Modules whose placeholder you haven't replaced stay green by design (the placeholder just echoes a message). Focus on the job for the module you're working on.
+> ℹ️ Modules whose placeholder you haven't replaced stay green by design (the placeholder just echoes a message), as long as the modules before them pass. While a module is red, the jobs downstream of it show as **skipped** until you fix it. Focus on the job for the module you're working on.
 
 > ℹ️ **Module 6 exception**: the runtime infra scan runs against a *live AWS account*, so there's no planted bait to fix. It's expected to pass green even when Prowler reports findings — see its `Running this module` section.
 
